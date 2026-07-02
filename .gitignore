@@ -24,3 +24,11 @@ public/build
 Thumbs.db
 docker-compose.override.yml
 .storage
+
+# FlyEnv local config
+.flyenv
+public/.flyenv
+
+# Sheaf component registry
+sheaf.json
+sheaf-lock.json
