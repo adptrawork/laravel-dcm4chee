@@ -41,6 +41,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Registration
     Route::get('/registration', [RegistrationController::class, 'index'])->name('registration.index');
     Route::post('/registration', [RegistrationController::class, 'store'])->name('registration.store');
+    Route::post('/registration/search-patients', [RegistrationController::class, 'searchPatients'])->name('registration.search-patients');
     Route::post('/registration/set-server', [RegistrationController::class, 'setServer'])->name('registration.set-server');
 
     // Worklist
