@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ExaminationTemplate;
 use App\Models\MwlConfig;
+use App\Models\Procedure;
 use App\Models\Server;
 use App\Models\WorklistItem;
 use App\Services\Dcm4chee\Client;
@@ -48,10 +49,11 @@ class RegistrationController extends Controller
         }
 
         $templates = ExaminationTemplate::orderBy('sort_order')->get();
+        $procedures = Procedure::where('is_active', true)->orderBy('sort_order')->get();
         $mwlConfig = MwlConfig::where('server_id', $serverId)->first();
 
         return view('registration.index', compact(
-            'servers', 'serverId', 'patients', 'query', 'selectedPatient', 'templates', 'mwlConfig'
+            'servers', 'serverId', 'patients', 'query', 'selectedPatient', 'templates', 'procedures', 'mwlConfig'
         ));
     }
 
@@ -86,6 +88,7 @@ class RegistrationController extends Controller
             'phone' => 'nullable|string|max:20',
             'requesting_physician' => 'nullable|string|max:255',
             'modality' => 'required|string|max:16',
+            'procedure_code' => 'nullable|string|max:32',
             'procedure_description' => 'required|string|max:255',
             'room' => 'nullable|string|max:50',
             'priority' => 'required|in:routine,urgent,stat',
@@ -144,11 +147,12 @@ class RegistrationController extends Controller
             'patient_name' => $patientName,
             'patient_id' => $patientId,
             'modality' => $validated['modality'],
+            'procedure_code' => $validated['procedure_code'] ?? null,
             'procedure_description' => $validated['procedure_description'],
             'requesting_physician' => $validated['requesting_physician'],
             'scheduled_date' => str_replace('-', '', $validated['scheduled_date']),
             'scheduled_time' => str_replace(':', '', $validated['scheduled_time']),
-            'status' => 'waiting',
+            'status' => WorklistItem::STATUS_MW_PUBLISHED,
         ]);
 
         return to_route('worklist.index')

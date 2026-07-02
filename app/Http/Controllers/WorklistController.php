@@ -51,22 +51,22 @@ class WorklistController extends Controller
 
                     $existing = WorklistItem::where('accession_number', $accession)->first();
 
-                    $status = 'waiting';
+                    $status = WorklistItem::STATUS_MW_PUBLISHED;
                     $sps = $item['00400100']['Value'][0] ?? [];
                     $spsStatus = $sps['00400020']['Value'][0] ?? '';
-                    if (in_array($spsStatus, ['COMPLETED', 'DISCONTINUED'])) {
-                        $status = 'completed';
-                    } elseif (in_array($spsStatus, ['IN PROGRESS'])) {
-                        $status = 'in_progress';
+                    if (in_array($spsStatus, ['IN PROGRESS'])) {
+                        $status = WorklistItem::STATUS_ACQUIRING;
+                    } elseif (in_array($spsStatus, ['COMPLETED', 'DISCONTINUED'])) {
+                        $status = WorklistItem::STATUS_ACQUIRED;
                     } elseif (in_array($spsStatus, ['CANCELED'])) {
-                        $status = 'cancelled';
+                        $status = WorklistItem::STATUS_CANCELLED;
                     }
 
                     $patientName = $item['00100010']['Value'][0]['Alphabetic'] ?? ($item['00100010']['Value'][0] ?? '');
                     $patientId = $item['00100020']['Value'][0] ?? '';
 
                     if ($existing) {
-                        if ($existing->status === 'waiting') {
+                        if (in_array($existing->status, [WorklistItem::STATUS_MW_PUBLISHED, WorklistItem::STATUS_REGISTERED])) {
                             $existing->update(['status' => $status]);
                         }
                     } else {
@@ -100,7 +100,7 @@ class WorklistController extends Controller
     {
         $validated = $request->validate(['status' => 'required|string']);
 
-        if ($validated['status'] === 'cancelled' && $item->status === 'waiting') {
+        if ($validated['status'] === WorklistItem::STATUS_CANCELLED && in_array($item->status, [WorklistItem::STATUS_REGISTERED, WorklistItem::STATUS_MW_PUBLISHED])) {
             $server = Server::find($item->server_id);
             if ($server) {
                 try {

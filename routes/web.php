@@ -1,14 +1,26 @@
 <?php
 
+use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\JobController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Utilities\DicomToolController;
+use App\Http\Controllers\Utilities\HealthController;
+use App\Http\Controllers\Utilities\LogViewerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeviceController;
+use App\Http\Controllers\MwlQueueController;
 use App\Http\Controllers\PacsMonitorController;
 use App\Http\Controllers\PatientController;
+use App\Http\Controllers\ProcedureController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\ServerController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\ModalityMonitorController;
 use App\Http\Controllers\StudyController;
+use App\Http\Controllers\StudyPollerController;
+use App\Http\Controllers\StudyTrackerController;
 use App\Http\Controllers\WorklistController;
 use Illuminate\Support\Facades\Route;
 
@@ -50,11 +62,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/worklist/{item}/status', [WorklistController::class, 'updateStatus'])->name('worklist.update-status');
     Route::post('/worklist/set-server', [WorklistController::class, 'setServer'])->name('worklist.set-server');
 
+    // MWL Queue
+    Route::get('/mwl-queue', [MwlQueueController::class, 'index'])->name('mwl-queue.index');
+    Route::post('/mwl-queue/set-server', [MwlQueueController::class, 'setServer'])->name('mwl-queue.set-server');
+    Route::post('/mwl-queue/{item}/renew', [MwlQueueController::class, 'renew'])->name('mwl-queue.renew');
+
     // PACS Monitor
     Route::get('/pacs-monitor', [PacsMonitorController::class, 'index'])->name('pacs-monitor.index');
     Route::post('/pacs-monitor/{item}/status', [PacsMonitorController::class, 'updateStatus'])->name('pacs-monitor.update-status');
     Route::get('/pacs-monitor/{item}/retry', [PacsMonitorController::class, 'retry'])->name('pacs-monitor.retry');
     Route::post('/pacs-monitor/set-server', [PacsMonitorController::class, 'setServer'])->name('pacs-monitor.set-server');
+
+    // Modality Monitor
+    Route::get('/modality-monitor', [ModalityMonitorController::class, 'index'])->name('modality-monitor.index');
+    Route::post('/modality-monitor/set-server', [ModalityMonitorController::class, 'setServer'])->name('modality-monitor.set-server');
+    Route::get('/modality-monitor/{device}/ping', [ModalityMonitorController::class, 'ping'])->name('modality-monitor.ping');
+
+    // Study Tracker
+    Route::get('/study-tracker', [StudyTrackerController::class, 'index'])->name('study-tracker.index');
+    Route::get('/study-tracker/{accession}', [StudyTrackerController::class, 'show'])->name('study-tracker.show');
+
+    // Study Poller (manual trigger)
+    Route::get('/studies/poll', [StudyPollerController::class, 'poll'])->name('studies.poll');
 
     // Devices
     Route::resource('devices', DeviceController::class);
@@ -66,6 +95,56 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/settings/mwl', [SettingsController::class, 'updateMwlConfig'])->name('settings.update-mwl');
     Route::post('/settings/templates', [SettingsController::class, 'storeTemplate'])->name('settings.store-template');
     Route::delete('/settings/templates/{template}', [SettingsController::class, 'destroyTemplate'])->name('settings.destroy-template');
+
+    // Admin - User Management
+    Route::resource('admin/users', UserController::class)->names([
+        'index' => 'admin.users.index',
+        'create' => 'admin.users.create',
+        'store' => 'admin.users.store',
+        'edit' => 'admin.users.edit',
+        'update' => 'admin.users.update',
+        'destroy' => 'admin.users.destroy',
+    ]);
+
+    // Admin - Role Management
+    Route::resource('admin/roles', RoleController::class)->names([
+        'index' => 'admin.roles.index',
+        'create' => 'admin.roles.create',
+        'store' => 'admin.roles.store',
+        'edit' => 'admin.roles.edit',
+        'update' => 'admin.roles.update',
+        'destroy' => 'admin.roles.destroy',
+    ]);
+
+    // Admin - Audit Logs
+    Route::get('/admin/audit-logs', [AuditLogController::class, 'index'])->name('admin.audit-logs.index');
+    Route::get('/admin/audit-logs/{auditLog}', [AuditLogController::class, 'show'])->name('admin.audit-logs.show');
+    Route::get('/admin/audit-logs/export', [AuditLogController::class, 'export'])->name('admin.audit-logs.export');
+
+    // Admin - Job Queue
+    Route::get('/admin/jobs', [JobController::class, 'index'])->name('admin.jobs.index');
+    Route::get('/admin/jobs/{id}/retry', [JobController::class, 'retry'])->name('admin.jobs.retry');
+
+    // Utilities - DICOM Tools
+    Route::get('/utilities/dicom', [DicomToolController::class, 'index'])->name('utilities.dicom.index');
+    Route::post('/utilities/dicom/echo', [DicomToolController::class, 'echo'])->name('utilities.dicom.echo');
+    Route::post('/utilities/dicom/ping', [DicomToolController::class, 'ping'])->name('utilities.dicom.ping');
+    Route::post('/utilities/dicom/find', [DicomToolController::class, 'find'])->name('utilities.dicom.find');
+    Route::post('/utilities/dicom/move', [DicomToolController::class, 'move'])->name('utilities.dicom.move');
+
+    // Utilities - Health Check
+    Route::get('/utilities/health', [HealthController::class, 'index'])->name('utilities.health');
+
+    // Utilities - Log Viewer
+    Route::get('/utilities/logs', [LogViewerController::class, 'index'])->name('utilities.log-viewer');
+
+    // Procedure Catalog
+    Route::get('/settings/procedures', [ProcedureController::class, 'index'])->name('settings.procedures.index');
+    Route::get('/settings/procedures/create', [ProcedureController::class, 'create'])->name('settings.procedures.create');
+    Route::post('/settings/procedures', [ProcedureController::class, 'store'])->name('settings.procedures.store');
+    Route::get('/settings/procedures/{procedure}/edit', [ProcedureController::class, 'edit'])->name('settings.procedures.edit');
+    Route::put('/settings/procedures/{procedure}', [ProcedureController::class, 'update'])->name('settings.procedures.update');
+    Route::delete('/settings/procedures/{procedure}', [ProcedureController::class, 'destroy'])->name('settings.procedures.destroy');
 });
 
 Route::middleware('auth')->group(function () {

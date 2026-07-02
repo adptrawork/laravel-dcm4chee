@@ -172,6 +172,21 @@
                             <x-ui.input name="requesting_physician" value="{{ old('requesting_physician', $mwlConfig->default_physician ?? '') }}" placeholder="dr. Spesialis" />
                         </div>
                         <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Prosedur</label>
+                            <select name="procedure_code" onchange="applyProcedure(this)"
+                                class="w-full rounded-field border border-black/10 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                                <option value="">-- Pilih Prosedur --</option>
+                                @foreach($procedures as $p)
+                                    <option value="{{ $p->code }}"
+                                        data-modality="{{ $p->modality }}"
+                                        data-desc="{{ $p->name }}: {{ $p->description }}"
+                                        data-room="{{ $p->default_room }}"
+                                        data-physician="{{ $p->default_physician }}"
+                                        {{ old('procedure_code') == $p->code ? 'selected' : '' }}>{{ $p->code }} - {{ $p->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Template</label>
                             <select name="template_id" onchange="applyTemplate(this)"
                                 class="w-full rounded-field border border-black/10 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
@@ -238,6 +253,23 @@
             document.getElementById('newPatientSection').classList.remove('hidden');
             document.getElementById('actionType').value = 'new';
             document.getElementById('newPatientSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function applyProcedure(select) {
+            const option = select.options[select.selectedIndex];
+            if (!option.value) return;
+            if (option.dataset.modality) {
+                document.querySelector('select[name="modality"]').value = option.dataset.modality;
+            }
+            if (option.dataset.desc) {
+                document.getElementById('procDesc').value = option.dataset.desc;
+            }
+            if (option.dataset.room) {
+                document.getElementById('roomField').value = option.dataset.room;
+            }
+            if (option.dataset.physician) {
+                document.querySelector('input[name="requesting_physician"]').value = option.dataset.physician;
+            }
         }
 
         function applyTemplate(select) {

@@ -1,10 +1,10 @@
 <x-app-layout>
-    @section('title', 'Worklist')
+    @section('title', 'MWL Queue')
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <x-ui.heading level="h1" size="xl">Worklist</x-ui.heading>
+            <x-ui.heading level="h1" size="xl">MWL Queue</x-ui.heading>
             <div class="flex items-center gap-3">
-                <form action="{{ route('worklist.set-server') }}" method="POST">
+                <form action="{{ route('mwl-queue.set-server') }}" method="POST">
                     @csrf
                     <select name="server_id" onchange="this.form.submit()"
                         class="rounded-field border border-black/10 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
@@ -13,9 +13,6 @@
                         @endforeach
                     </select>
                 </form>
-                <a href="{{ route('worklist.refresh') }}">
-                    <x-ui.button variant="primary" size="sm">Refresh</x-ui.button>
-                </a>
             </div>
         </div>
     </x-slot>
@@ -25,15 +22,13 @@
             @if(session('success'))
                 <div class="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm">{{ session('success') }}</div>
             @endif
-            @if($errors->any())
-                <div class="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{{ $errors->first() }}</div>
-            @endif
 
             <div class="flex gap-1 mb-4 flex-wrap">
-                @foreach(['' => 'All', \App\Models\WorklistItem::STATUS_MW_PUBLISHED => 'Published', \App\Models\WorklistItem::STATUS_ACQUIRING => 'Acquiring', \App\Models\WorklistItem::STATUS_ACQUIRED => 'Acquired', \App\Models\WorklistItem::STATUS_CANCELLED => 'Cancelled'] as $val => $label)
-                    <a href="{{ route('worklist.index', $val ? ['status' => $val] : []) }}"
+                @foreach(['' => 'All', \App\Models\WorklistItem::STATUS_REGISTERED => 'Registered', \App\Models\WorklistItem::STATUS_MW_PUBLISHED => 'Published', \App\Models\WorklistItem::STATUS_TAKEN_BY_MODALITY => 'Taken'] as $val => $label)
+                    @php $valClean = $val ?: ''; @endphp
+                    <a href="{{ route('mwl-queue.index', $val ? ['status' => $val] : []) }}"
                         class="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors
-                            {{ $status == $val ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50' }}">
+                            {{ ($status ?? '') == $val ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50' }}">
                         {{ $label }}
                     </a>
                 @endforeach
@@ -47,10 +42,10 @@
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-[130px]">Accession</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Patient</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Examination</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-20">Modality</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Schedule</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-24">Status</th>
-                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-16">Action</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-16">Modality</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-20">Schedule</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-28">Status</th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-20">Action</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
@@ -63,7 +58,6 @@
                                     <td class="px-4 py-3 text-xs text-gray-500">
                                         @if($item->scheduled_date)
                                             {{ substr($item->scheduled_date, 0, 4) }}-{{ substr($item->scheduled_date, 4, 2) }}-{{ substr($item->scheduled_date, 6, 2) }}
-                                            {{ substr($item->scheduled_time, 0, 2) }}:{{ substr($item->scheduled_time, 2, 2) }}
                                         @endif
                                     </td>
                                     <td class="px-4 py-3">
@@ -72,18 +66,17 @@
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 text-right">
-                                        @if(in_array($item->status, [\App\Models\WorklistItem::STATUS_MW_PUBLISHED, \App\Models\WorklistItem::STATUS_REGISTERED]))
-                                            <form method="POST" action="{{ route('worklist.update-status', $item) }}" class="inline">
+                                        @if(in_array($item->status, ['registered', 'mw_published']))
+                                            <form method="POST" action="{{ route('mwl-queue.renew', $item) }}" class="inline">
                                                 @csrf
-                                                <input type="hidden" name="status" value="cancelled">
-                                                <button onclick="return confirm('Cancel this MWL?')" class="text-xs text-red-600 hover:text-red-800 font-medium">Cancel</button>
+                                                <button class="text-xs text-blue-600 hover:text-blue-800 font-medium">Re-publish</button>
                                             </form>
                                         @endif
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-4 py-12 text-center text-sm text-gray-400">No worklist items.</td>
+                                    <td colspan="7" class="px-4 py-12 text-center text-sm text-gray-400">No MWL items.</td>
                                 </tr>
                             @endforelse
                         </tbody>

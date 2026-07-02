@@ -8,24 +8,24 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
                 <div class="bg-white rounded-xl border border-gray-200 p-4 text-center shadow-sm">
-                    <p class="text-2xl font-bold text-blue-700">{{ $stats['waiting_mwl'] }}</p>
-                    <p class="text-xs text-blue-600 font-medium mt-1">Waiting MWL</p>
+                    <p class="text-2xl font-bold text-blue-700">{{ $stats['registered'] ?? 0 }}</p>
+                    <p class="text-xs text-blue-600 font-medium mt-1">Registered</p>
                 </div>
                 <div class="bg-white rounded-xl border border-gray-200 p-4 text-center shadow-sm">
-                    <p class="text-2xl font-bold text-yellow-700">{{ $stats['in_progress'] }}</p>
-                    <p class="text-xs text-yellow-600 font-medium mt-1">In Progress</p>
+                    <p class="text-2xl font-bold text-indigo-700">{{ $stats['mw_published'] ?? 0 }}</p>
+                    <p class="text-xs text-indigo-600 font-medium mt-1">MWL Published</p>
                 </div>
                 <div class="bg-white rounded-xl border border-gray-200 p-4 text-center shadow-sm">
-                    <p class="text-2xl font-bold text-green-700">{{ $stats['completed'] }}</p>
-                    <p class="text-xs text-green-600 font-medium mt-1">Completed</p>
+                    <p class="text-2xl font-bold text-yellow-700">{{ $stats['acquiring'] ?? 0 }}</p>
+                    <p class="text-xs text-yellow-600 font-medium mt-1">Acquiring</p>
                 </div>
                 <div class="bg-white rounded-xl border border-gray-200 p-4 text-center shadow-sm">
-                    <p class="text-2xl font-bold text-indigo-700">{{ $stats['sent'] }}</p>
-                    <p class="text-xs text-indigo-600 font-medium mt-1">Sent to PACS</p>
+                    <p class="text-2xl font-bold text-orange-700">{{ $stats['acquired'] ?? 0 }}</p>
+                    <p class="text-xs text-orange-600 font-medium mt-1">Acquired</p>
                 </div>
                 <div class="bg-white rounded-xl border border-gray-200 p-4 text-center shadow-sm">
-                    <p class="text-2xl font-bold text-red-700">{{ $stats['failed'] }}</p>
-                    <p class="text-xs text-red-600 font-medium mt-1">Failed</p>
+                    <p class="text-2xl font-bold text-green-700">{{ $stats['archived'] ?? 0 }}</p>
+                    <p class="text-xs text-green-600 font-medium mt-1">Archived</p>
                 </div>
                 <div class="bg-white rounded-xl border border-gray-200 p-4 text-center shadow-sm">
                     <p class="text-2xl font-bold text-gray-700">{{ $stats['dicom_status'] ?? '?' }}</p>
@@ -41,7 +41,8 @@
                             @foreach($recentItems as $item)
                                 <div class="flex items-center justify-between text-sm">
                                     <div class="flex items-center gap-2">
-                                        <span class="w-2 h-2 rounded-full {{ $item->status === 'sent' ? 'bg-green-400' : ($item->status === 'failed' ? 'bg-red-400' : ($item->status === 'in_progress' ? 'bg-yellow-400' : 'bg-gray-400')) }}"></span>
+                                        @php $dotColor = match($item->status) { 'sent_to_pacs', 'archived', 'reported', 'verified' => 'bg-green-400', 'failed', 'cancelled' => 'bg-red-400', 'acquiring' => 'bg-yellow-400', default => 'bg-gray-400' }; @endphp
+                                        <span class="w-2 h-2 rounded-full {{ $dotColor }}"></span>
                                         <span class="text-gray-600">{{ $item->patient_name }}</span>
                                     </div>
                                     <span class="text-xs text-gray-400">{{ $item->procedure_description }}</span>

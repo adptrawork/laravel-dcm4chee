@@ -13,7 +13,7 @@
                 <div class="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{{ $errors->first() }}</div>
             @endif
 
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <div id="system-settings" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
                 <x-ui.heading level="h2" size="sm" class="mb-4">System Settings</x-ui.heading>
                 <form method="POST" action="{{ route('settings.update-system') }}">
                     @csrf
@@ -37,7 +37,7 @@
                 </form>
             </div>
 
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <div id="mwl-config" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
                 <x-ui.heading level="h2" size="sm" class="mb-4">MWL Configuration</x-ui.heading>
                 @php $mwlConfig = null; @endphp
                 @if(($serverId = $servers->first()?->id) && $servers->count())
@@ -82,7 +82,7 @@
                 </form>
             </div>
 
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <div id="templates" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
                 <div class="flex items-center justify-between mb-4">
                     <x-ui.heading level="h2" size="sm">Examination Templates</x-ui.heading>
                 </div>

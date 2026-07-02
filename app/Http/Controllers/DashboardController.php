@@ -23,12 +23,11 @@ class DashboardController extends Controller
             }
         }
 
-        $stats['patients_today'] = 0;
-        $stats['waiting_mwl'] = WorklistItem::where('status', 'waiting')->count();
-        $stats['in_progress'] = WorklistItem::where('status', 'in_progress')->count();
-        $stats['completed'] = WorklistItem::where('status', 'completed')->count();
-        $stats['sent'] = WorklistItem::where('status', 'sent')->count();
-        $stats['failed'] = WorklistItem::where('status', 'failed')->count();
+        $stats['registered'] = WorklistItem::where('status', WorklistItem::STATUS_REGISTERED)->count();
+        $stats['mw_published'] = WorklistItem::where('status', WorklistItem::STATUS_MW_PUBLISHED)->count();
+        $stats['acquiring'] = WorklistItem::where('status', WorklistItem::STATUS_ACQUIRING)->count();
+        $stats['acquired'] = WorklistItem::where('status', WorklistItem::STATUS_ACQUIRED)->count();
+        $stats['archived'] = WorklistItem::where('status', WorklistItem::STATUS_ARCHIVED)->count();
 
         $recentItems = WorklistItem::latest()->take(10)->get();
         $recentLogs = AuditLog::with('server')->latest()->take(5)->get();

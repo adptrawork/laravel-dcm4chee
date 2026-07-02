@@ -30,10 +30,10 @@ class PacsMonitorController extends Controller
 
     public function updateStatus(Request $request, WorklistItem $item): RedirectResponse
     {
-        $validated = $request->validate(['status' => 'required|string|in:sent,failed']);
+        $validated = $request->validate(['status' => 'required|string|in:' . WorklistItem::STATUS_SENT_TO_PACS . ',' . WorklistItem::STATUS_FAILED]);
         $item->update([
             'status' => $validated['status'],
-            'sent_at' => $validated['status'] === 'sent' ? now() : null,
+            'archived_at' => $validated['status'] === WorklistItem::STATUS_SENT_TO_PACS ? now() : null,
         ]);
 
         return back()->with('success', "Status updated to {$validated['status']}.");
@@ -46,7 +46,7 @@ class PacsMonitorController extends Controller
             return back()->withErrors(['error' => 'No server configured.']);
         }
 
-        $item->update(['status' => 'waiting', 'error_message' => null]);
+        $item->update(['status' => WorklistItem::STATUS_MW_PUBLISHED, 'error_message' => null]);
 
         return back()->with('success', 'Item requeued for processing.');
     }
