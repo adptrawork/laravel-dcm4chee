@@ -14,16 +14,16 @@
             ['label' => 'Settings', 'route' => 'settings.index', 'icon' => 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4'],
         ],
     ];
-
     $activeServer = session('active_server_id')
         ? \App\Models\Server::find(session('active_server_id'))
         : \App\Models\Server::where('enabled', true)->first();
 @endphp
 
-<!-- Sidebar -->
-<div x-data="{ open: false }" class="fixed inset-y-0 left-0 z-30 w-64 bg-gray-900 transform transition-transform duration-200 ease-in-out lg:translate-x-0 {{ request()->routeIs('login') || request()->routeIs('register') ? '-translate-x-full' : '' }}" :class="{ '-translate-x-full': !open, 'translate-x-0': open }">
+<div x-data="{ open: false }"
+     class="fixed inset-y-0 left-0 z-30 w-64 bg-[#111827] transform transition-transform duration-200 ease-in-out lg:translate-x-0 {{ request()->routeIs('login') || request()->routeIs('register') ? '-translate-x-full' : '' }}"
+     :class="{ '-translate-x-full': !open, 'translate-x-0': open }">
     <div class="flex items-center h-16 px-6 bg-gray-800">
-        <a href="{{ route('dashboard') }}" class="flex items-center space-x-3">
+        <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
             <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -39,7 +39,7 @@
                 <p class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ $group }}</p>
                 <div class="mt-2 space-y-1">
                     @foreach($items as $item)
-                        <a href="{{ route($item['route']) }}
+                        <a href="{{ route($item['route']) }}"
                             class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-150
                                    {{ request()->routeIs($item['route'] . '*') ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
                             <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,12 +66,13 @@
             <div class="flex items-center px-3 py-2 text-sm text-gray-400">
                 <div class="w-2 h-2 rounded-full bg-green-400 mr-2"></div>
                 <span>{{ $activeServer->name }}</span>
-            </div>
         </div>
+    </div>
     @endif
 </div>
 
-<!-- Mobile menu button -->
+<form id="logout-form" method="POST" action="{{ route('logout') }}" class="hidden">@csrf</form>
+
 <div class="lg:hidden fixed top-0 left-0 z-40 p-4">
     <button @click="open = !open" class="text-gray-500 hover:text-gray-700 focus:outline-none">
         <svg class="w-6 h-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
@@ -81,11 +82,10 @@
     </button>
 </div>
 
-<!-- Top bar -->
-<div class="lg:hidden bg-white border-b border-gray-200 shadow-sm">
+<div class="lg:hidden bg-white border-b border-gray-200">
     <div class="flex justify-end items-center h-16 px-4">
-        <x-dropdown align="right" width="48">
-            <x-slot name="trigger">
+        <x-ui.dropdown position="bottom-end">
+            <x-slot name="button">
                 <button class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
                     <div>{{ Auth::user()->name }}</div>
                     <svg class="ml-1 w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -93,25 +93,18 @@
                     </svg>
                 </button>
             </x-slot>
-            <x-slot name="content">
-                <x-dropdown-link :href="route('profile.edit')">{{ __('Profile') }}</x-dropdown-link>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <x-dropdown-link :href="route('logout')"
-                        onclick="event.preventDefault(); this.closest('form').submit();">
-                        {{ __('Log Out') }}
-                    </x-dropdown-link>
-                </form>
+            <x-slot name="menu">
+                <x-ui.dropdown.item :href="route('profile.edit')">{{ __('Profile') }}</x-ui.dropdown.item>
+                <x-ui.dropdown.item :href="route('logout')" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">{{ __('Log Out') }}</x-ui.dropdown.item>
             </x-slot>
-        </x-dropdown>
+        </x-ui.dropdown>
     </div>
 </div>
 
-<!-- Desktop top bar -->
-<div class="hidden lg:flex bg-white border-b border-gray-200 shadow-sm">
+<div class="hidden lg:flex bg-white border-b border-gray-200">
     <div class="flex justify-end items-center h-16 px-8 ml-auto">
-        <x-dropdown align="right" width="48">
-            <x-slot name="trigger">
+        <x-ui.dropdown position="bottom-end">
+            <x-slot name="button">
                 <button class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
                     <div>{{ Auth::user()->name }}</div>
                     <svg class="ml-1 w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -119,16 +112,10 @@
                     </svg>
                 </button>
             </x-slot>
-            <x-slot name="content">
-                <x-dropdown-link :href="route('profile.edit')">{{ __('Profile') }}</x-dropdown-link>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <x-dropdown-link :href="route('logout')"
-                        onclick="event.preventDefault(); this.closest('form').submit();">
-                        {{ __('Log Out') }}
-                    </x-dropdown-link>
-                </form>
+            <x-slot name="menu">
+                <x-ui.dropdown.item :href="route('profile.edit')">{{ __('Profile') }}</x-ui.dropdown.item>
+                <x-ui.dropdown.item :href="route('logout')" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">{{ __('Log Out') }}</x-ui.dropdown.item>
             </x-slot>
-        </x-dropdown>
+        </x-ui.dropdown>
     </div>
 </div>

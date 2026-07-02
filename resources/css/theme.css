@@ -1,0 +1,16 @@
+/* By Sheaf.dev */
+@theme inline {
+    --font-sans: 'Figtree', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-primary: #2563eb;
+    --color-primary-content: #1d4ed8;
+    --color-primary-fg: #ffffff;
+
+    --color-sidebar: #111827;
+    --color-sidebar-hover: #1f2937;
+    --color-sidebar-text: #d1d5db;
+    --color-sidebar-active: #ffffff;
+
+    --radius-field: 0.375rem;
+    --radius-box: 0.5rem;
+}
