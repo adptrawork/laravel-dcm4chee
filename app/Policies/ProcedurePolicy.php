@@ -1,106 +1,75 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
-use Illuminate\Auth\Access\Response;
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Procedure;
-use App\Models\User;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ProcedurePolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    use HandlesAuthorization;
+    
+    public function viewAny(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('view-any Procedure');
+        return $authUser->can('ViewAny:Procedure');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Procedure $procedure): bool
+    public function view(AuthUser $authUser, Procedure $procedure): bool
     {
-        return $user->checkPermissionTo('view Procedure');
+        return $authUser->can('View:Procedure');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('create Procedure');
+        return $authUser->can('Create:Procedure');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Procedure $procedure): bool
+    public function update(AuthUser $authUser, Procedure $procedure): bool
     {
-        return $user->checkPermissionTo('update Procedure');
+        return $authUser->can('Update:Procedure');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Procedure $procedure): bool
+    public function delete(AuthUser $authUser, Procedure $procedure): bool
     {
-        return $user->checkPermissionTo('delete Procedure');
+        return $authUser->can('Delete:Procedure');
     }
 
-    /**
-     * Determine whether the user can delete any models.
-     */
-    public function deleteAny(User $user): bool
+    public function deleteAny(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('delete-any Procedure');
+        return $authUser->can('DeleteAny:Procedure');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Procedure $procedure): bool
+    public function restore(AuthUser $authUser, Procedure $procedure): bool
     {
-        return $user->checkPermissionTo('restore Procedure');
+        return $authUser->can('Restore:Procedure');
     }
 
-    /**
-     * Determine whether the user can restore any models.
-     */
-    public function restoreAny(User $user): bool
+    public function forceDelete(AuthUser $authUser, Procedure $procedure): bool
     {
-        return $user->checkPermissionTo('restore-any Procedure');
+        return $authUser->can('ForceDelete:Procedure');
     }
 
-    /**
-     * Determine whether the user can replicate the model.
-     */
-    public function replicate(User $user, Procedure $procedure): bool
+    public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('replicate Procedure');
+        return $authUser->can('ForceDeleteAny:Procedure');
     }
 
-    /**
-     * Determine whether the user can reorder the models.
-     */
-    public function reorder(User $user): bool
+    public function restoreAny(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('reorder Procedure');
+        return $authUser->can('RestoreAny:Procedure');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Procedure $procedure): bool
+    public function replicate(AuthUser $authUser, Procedure $procedure): bool
     {
-        return $user->checkPermissionTo('force-delete Procedure');
+        return $authUser->can('Replicate:Procedure');
     }
 
-    /**
-     * Determine whether the user can permanently delete any models.
-     */
-    public function forceDeleteAny(User $user): bool
+    public function reorder(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('force-delete-any Procedure');
+        return $authUser->can('Reorder:Procedure');
     }
+
 }

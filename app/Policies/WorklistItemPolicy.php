@@ -1,106 +1,75 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
-use Illuminate\Auth\Access\Response;
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\WorklistItem;
-use App\Models\User;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class WorklistItemPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    use HandlesAuthorization;
+    
+    public function viewAny(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('view-any WorklistItem');
+        return $authUser->can('ViewAny:WorklistItem');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, WorklistItem $worklistitem): bool
+    public function view(AuthUser $authUser, WorklistItem $worklistItem): bool
     {
-        return $user->checkPermissionTo('view WorklistItem');
+        return $authUser->can('View:WorklistItem');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('create WorklistItem');
+        return $authUser->can('Create:WorklistItem');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, WorklistItem $worklistitem): bool
+    public function update(AuthUser $authUser, WorklistItem $worklistItem): bool
     {
-        return $user->checkPermissionTo('update WorklistItem');
+        return $authUser->can('Update:WorklistItem');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, WorklistItem $worklistitem): bool
+    public function delete(AuthUser $authUser, WorklistItem $worklistItem): bool
     {
-        return $user->checkPermissionTo('delete WorklistItem');
+        return $authUser->can('Delete:WorklistItem');
     }
 
-    /**
-     * Determine whether the user can delete any models.
-     */
-    public function deleteAny(User $user): bool
+    public function deleteAny(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('delete-any WorklistItem');
+        return $authUser->can('DeleteAny:WorklistItem');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, WorklistItem $worklistitem): bool
+    public function restore(AuthUser $authUser, WorklistItem $worklistItem): bool
     {
-        return $user->checkPermissionTo('restore WorklistItem');
+        return $authUser->can('Restore:WorklistItem');
     }
 
-    /**
-     * Determine whether the user can restore any models.
-     */
-    public function restoreAny(User $user): bool
+    public function forceDelete(AuthUser $authUser, WorklistItem $worklistItem): bool
     {
-        return $user->checkPermissionTo('restore-any WorklistItem');
+        return $authUser->can('ForceDelete:WorklistItem');
     }
 
-    /**
-     * Determine whether the user can replicate the model.
-     */
-    public function replicate(User $user, WorklistItem $worklistitem): bool
+    public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('replicate WorklistItem');
+        return $authUser->can('ForceDeleteAny:WorklistItem');
     }
 
-    /**
-     * Determine whether the user can reorder the models.
-     */
-    public function reorder(User $user): bool
+    public function restoreAny(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('reorder WorklistItem');
+        return $authUser->can('RestoreAny:WorklistItem');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, WorklistItem $worklistitem): bool
+    public function replicate(AuthUser $authUser, WorklistItem $worklistItem): bool
     {
-        return $user->checkPermissionTo('force-delete WorklistItem');
+        return $authUser->can('Replicate:WorklistItem');
     }
 
-    /**
-     * Determine whether the user can permanently delete any models.
-     */
-    public function forceDeleteAny(User $user): bool
+    public function reorder(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('force-delete-any WorklistItem');
+        return $authUser->can('Reorder:WorklistItem');
     }
+
 }

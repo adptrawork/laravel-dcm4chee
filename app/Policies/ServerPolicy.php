@@ -1,106 +1,75 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
-use Illuminate\Auth\Access\Response;
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Server;
-use App\Models\User;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ServerPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    use HandlesAuthorization;
+    
+    public function viewAny(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('view-any Server');
+        return $authUser->can('ViewAny:Server');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Server $server): bool
+    public function view(AuthUser $authUser, Server $server): bool
     {
-        return $user->checkPermissionTo('view Server');
+        return $authUser->can('View:Server');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('create Server');
+        return $authUser->can('Create:Server');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Server $server): bool
+    public function update(AuthUser $authUser, Server $server): bool
     {
-        return $user->checkPermissionTo('update Server');
+        return $authUser->can('Update:Server');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Server $server): bool
+    public function delete(AuthUser $authUser, Server $server): bool
     {
-        return $user->checkPermissionTo('delete Server');
+        return $authUser->can('Delete:Server');
     }
 
-    /**
-     * Determine whether the user can delete any models.
-     */
-    public function deleteAny(User $user): bool
+    public function deleteAny(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('delete-any Server');
+        return $authUser->can('DeleteAny:Server');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Server $server): bool
+    public function restore(AuthUser $authUser, Server $server): bool
     {
-        return $user->checkPermissionTo('restore Server');
+        return $authUser->can('Restore:Server');
     }
 
-    /**
-     * Determine whether the user can restore any models.
-     */
-    public function restoreAny(User $user): bool
+    public function forceDelete(AuthUser $authUser, Server $server): bool
     {
-        return $user->checkPermissionTo('restore-any Server');
+        return $authUser->can('ForceDelete:Server');
     }
 
-    /**
-     * Determine whether the user can replicate the model.
-     */
-    public function replicate(User $user, Server $server): bool
+    public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('replicate Server');
+        return $authUser->can('ForceDeleteAny:Server');
     }
 
-    /**
-     * Determine whether the user can reorder the models.
-     */
-    public function reorder(User $user): bool
+    public function restoreAny(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('reorder Server');
+        return $authUser->can('RestoreAny:Server');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Server $server): bool
+    public function replicate(AuthUser $authUser, Server $server): bool
     {
-        return $user->checkPermissionTo('force-delete Server');
+        return $authUser->can('Replicate:Server');
     }
 
-    /**
-     * Determine whether the user can permanently delete any models.
-     */
-    public function forceDeleteAny(User $user): bool
+    public function reorder(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('force-delete-any Server');
+        return $authUser->can('Reorder:Server');
     }
+
 }

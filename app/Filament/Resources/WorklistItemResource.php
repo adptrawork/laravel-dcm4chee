@@ -5,7 +5,6 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\WorklistItemResource\Pages;
 use App\Models\WorklistItem;
 use Filament\Forms\Components\Select;
-use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -24,15 +23,6 @@ class WorklistItemResource extends Resource
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
     protected static string|\UnitEnum|null $navigationGroup = 'Clinical';
     protected static ?int $navigationSort = 3;
-
-    public static function canViewAny(): bool
-    {
-        return auth()->user()?->can('view_worklist') ?? false;
-    }
-
-    public static function canCreate(): bool { return auth()->user()?->can('create_order') ?? false; }
-    public static function canEdit(Model $record): bool { return static::canViewAny(); }
-    public static function canDelete(Model $record): bool { return false; }
 
     public static function form(Schema $schema): Schema
     {

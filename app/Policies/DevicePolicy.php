@@ -1,106 +1,75 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
-use Illuminate\Auth\Access\Response;
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Device;
-use App\Models\User;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class DevicePolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    use HandlesAuthorization;
+    
+    public function viewAny(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('view-any Device');
+        return $authUser->can('ViewAny:Device');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Device $device): bool
+    public function view(AuthUser $authUser, Device $device): bool
     {
-        return $user->checkPermissionTo('view Device');
+        return $authUser->can('View:Device');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('create Device');
+        return $authUser->can('Create:Device');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Device $device): bool
+    public function update(AuthUser $authUser, Device $device): bool
     {
-        return $user->checkPermissionTo('update Device');
+        return $authUser->can('Update:Device');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Device $device): bool
+    public function delete(AuthUser $authUser, Device $device): bool
     {
-        return $user->checkPermissionTo('delete Device');
+        return $authUser->can('Delete:Device');
     }
 
-    /**
-     * Determine whether the user can delete any models.
-     */
-    public function deleteAny(User $user): bool
+    public function deleteAny(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('delete-any Device');
+        return $authUser->can('DeleteAny:Device');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Device $device): bool
+    public function restore(AuthUser $authUser, Device $device): bool
     {
-        return $user->checkPermissionTo('restore Device');
+        return $authUser->can('Restore:Device');
     }
 
-    /**
-     * Determine whether the user can restore any models.
-     */
-    public function restoreAny(User $user): bool
+    public function forceDelete(AuthUser $authUser, Device $device): bool
     {
-        return $user->checkPermissionTo('restore-any Device');
+        return $authUser->can('ForceDelete:Device');
     }
 
-    /**
-     * Determine whether the user can replicate the model.
-     */
-    public function replicate(User $user, Device $device): bool
+    public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('replicate Device');
+        return $authUser->can('ForceDeleteAny:Device');
     }
 
-    /**
-     * Determine whether the user can reorder the models.
-     */
-    public function reorder(User $user): bool
+    public function restoreAny(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('reorder Device');
+        return $authUser->can('RestoreAny:Device');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Device $device): bool
+    public function replicate(AuthUser $authUser, Device $device): bool
     {
-        return $user->checkPermissionTo('force-delete Device');
+        return $authUser->can('Replicate:Device');
     }
 
-    /**
-     * Determine whether the user can permanently delete any models.
-     */
-    public function forceDeleteAny(User $user): bool
+    public function reorder(AuthUser $authUser): bool
     {
-        return $user->checkPermissionTo('force-delete-any Device');
+        return $authUser->can('Reorder:Device');
     }
+
 }

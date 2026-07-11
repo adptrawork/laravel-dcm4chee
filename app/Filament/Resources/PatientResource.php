@@ -21,16 +21,6 @@ class PatientResource extends Resource
     protected static string|\UnitEnum|null $navigationGroup = 'Clinical';
     protected static ?int $navigationSort = 1;
 
-    public static function canViewAny(): bool
-    {
-        return auth()->user()?->can('create_order') ?? false;
-    }
-
-    public static function canCreate(): bool
-    {
-        return auth()->user()?->hasRole('admin') ?? false;
-    }
-
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([

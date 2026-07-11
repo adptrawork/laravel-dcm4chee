@@ -3,41 +3,29 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use BezhanSalleh\FilamentShield\Support\Utils;
+use Filament\Facades\Filament;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Artisan;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
     public function run(): void
     {
-        $permissions = [
-            'view_dashboard', 'view_studies', 'view_worklist',
-            'create_order', 'edit_order', 'write_report', 'verify_report',
-            'manage_servers', 'manage_devices', 'manage_procedures', 'manage_users',
-        ];
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
 
-        foreach ($permissions as $name) {
-            Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
-        }
+        Artisan::call('shield:generate', [
+            '--all' => true,
+            '--option' => 'policies_and_permissions',
+            '--panel' => 'admin',
+        ]);
 
-        $admin = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
-        $admin->syncPermissions(Permission::pluck('name')->all());
-
-        $radiologist = Role::firstOrCreate(['name' => 'radiologist', 'guard_name' => 'web']);
-        $radiologist->syncPermissions(['view_dashboard', 'view_studies', 'view_worklist',
-            'create_order', 'write_report', 'verify_report']);
-
-        $radiographer = Role::firstOrCreate(['name' => 'radiographer', 'guard_name' => 'web']);
-        $radiographer->syncPermissions(['view_dashboard', 'view_worklist',
-            'create_order', 'edit_order']);
-
-        $dokter = Role::firstOrCreate(['name' => 'dokter', 'guard_name' => 'web']);
-        $dokter->syncPermissions(['view_studies', 'view_worklist']);
+        $role = Utils::createRole();
+        $role->syncPermissions(Utils::getPermissionModel()::pluck('id'));
 
         $user = User::where('email', 'admin@admin.com')->first();
         if ($user) {
-            $user->assignRole('admin');
+            $user->assignRole($role);
         }
     }
 }

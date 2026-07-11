@@ -6,7 +6,6 @@ use App\Filament\Resources\ReportResource\Pages;
 use App\Models\Order;
 use App\Models\Report;
 use Filament\Forms\Components\RichEditor;
-use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Set;
@@ -24,15 +23,6 @@ class ReportResource extends Resource
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
     protected static string|\UnitEnum|null $navigationGroup = 'Clinical';
     protected static ?int $navigationSort = 4;
-
-    public static function canViewAny(): bool
-    {
-        return auth()->user()?->can('write_report') ?? false;
-    }
-
-    public static function canCreate(): bool { return static::canViewAny(); }
-    public static function canEdit(Model $record): bool { return static::canViewAny(); }
-    public static function canDelete(Model $record): bool { return false; }
 
     public static function form(Schema $schema): Schema
     {
