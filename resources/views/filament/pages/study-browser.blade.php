@@ -3,34 +3,70 @@
         <x-slot name="heading">Study Browser</x-slot>
         <x-slot name="description">Cari studi imaging dari PACS berdasarkan pasien, tanggal, atau accession number</x-slot>
 
-        <form wire:submit="search" class="mb-6">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1">Nama Pasien</label>
-                    <x-filament::input.wrapper>
-                        <x-filament::input type="text" placeholder="cth. Smith" wire:model="searchName" />
-                    </x-filament::input.wrapper>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1">Patient ID</label>
-                    <x-filament::input.wrapper>
-                        <x-filament::input type="text" placeholder="cth. MRN-001" wire:model="searchId" />
-                    </x-filament::input.wrapper>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1">Tanggal Studi</label>
-                    <x-filament::input.wrapper>
-                        <x-filament::input type="date" wire:model="searchDate" />
-                    </x-filament::input.wrapper>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1">Accession No.</label>
-                    <x-filament::input.wrapper>
-                        <x-filament::input type="text" placeholder="cth. ACC-2026..." wire:model="searchAccession" />
-                    </x-filament::input.wrapper>
-                </div>
-            </div>
+        <form wire:submit="search">
+            <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
 
+    <div class="grid grid-cols-12 gap-4">
+
+        {{-- Patient Name --}}
+        <div class="col-span-12 md:col-span-6 xl:col-span-3">
+            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Nama Pasien
+            </label>
+
+            <x-filament::input.wrapper prefix-icon="heroicon-m-user">
+                <x-filament::input
+                    wire:model.live.debounce.500ms="searchName"
+                    placeholder="Cari nama pasien..."
+                />
+            </x-filament::input.wrapper>
+        </div>
+
+        {{-- Patient ID --}}
+        <div class="col-span-12 md:col-span-6 xl:col-span-3">
+            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Patient ID
+            </label>
+
+            <x-filament::input.wrapper prefix-icon="heroicon-m-identification">
+                <x-filament::input
+                    wire:model.live.debounce.500ms="searchId"
+                    placeholder="MRN-00001"
+                />
+            </x-filament::input.wrapper>
+        </div>
+
+        {{-- Study Date --}}
+        <div class="col-span-12 md:col-span-6 xl:col-span-3">
+            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Tanggal Studi
+            </label>
+
+            <x-filament::input.wrapper prefix-icon="heroicon-m-calendar-days">
+                <x-filament::input
+                    type="date"
+                    wire:model.live="searchDate"
+                />
+            </x-filament::input.wrapper>
+        </div>
+
+        {{-- Accession --}}
+        <div class="col-span-12 md:col-span-6 xl:col-span-3">
+            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Accession Number
+            </label>
+
+            <x-filament::input.wrapper prefix-icon="heroicon-m-hashtag">
+                <x-filament::input
+                    wire:model.live.debounce.500ms="searchAccession"
+                    placeholder="ACC-20260001"
+                />
+            </x-filament::input.wrapper>
+        </div>
+
+    </div>
+
+</div>
             <div class="flex items-center gap-2">
                 <x-filament::button type="submit" icon="heroicon-o-magnifying-glass"
                     wire:loading.attr="disabled" wire:target="search,loadStudies">
@@ -45,66 +81,62 @@
                 @endif
 
                 <div wire:loading wire:target="search,loadStudies" class="text-xs text-gray-400 flex items-center gap-1">
-                    <svg class="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
-                    </svg>
+                    <x-filament::loading-indicator class="h-4 w-4" />
                     Menghubungi PACS...
                 </div>
             </div>
         </form>
+    </x-filament::section>
 
-        {{-- Error state --}}
-        @if($error)
-            <div class="p-4 mb-4 text-sm text-danger-700 bg-danger-50 rounded-lg">
-                <x-filament::icon name="heroicon-o-exclamation-triangle" class="w-5 h-5 inline mr-1" />
+    @if($error)
+        <x-filament::section>
+            <div class="flex items-center gap-2 text-sm text-danger-700">
+                <x-filament::icon name="heroicon-o-exclamation-triangle" class="w-5 h-5" />
                 {{ $error }}
             </div>
-        @endif
+        </x-filament::section>
+    @endif
 
-        {{-- Search status --}}
-        @if($searched && !$error)
-            <div class="flex items-center justify-between text-sm text-gray-500 mb-3">
-                <span>{{ count($studies) }} studi ditemukan</span>
-                @if(count($studies) > 0)
-                    <span class="text-xs text-gray-400">Halaman {{ $page }}</span>
-                @endif
-            </div>
-        @endif
+    @if($searched && !$error)
+        <div class="flex items-center justify-between text-sm text-gray-500 mt-2 mb-3">
+            <span>{{ count($studies) }} studi ditemukan</span>
+            @if(count($studies) > 0)
+                <span class="text-xs text-gray-400">Halaman {{ $page }}</span>
+            @endif
+        </div>
+    @endif
 
-        {{-- Empty state --}}
-        @if($searched && count($studies) === 0 && !$error)
-            <div class="text-center py-10 text-gray-400 border border-dashed border-gray-200 rounded-lg">
+    @if($searched && count($studies) === 0 && !$error)
+        <x-filament::section>
+            <div class="text-center py-10 text-gray-400">
                 <x-filament::icon name="heroicon-o-document-magnifying-glass" class="w-10 h-10 mx-auto mb-2" />
                 <p class="font-medium text-gray-500">Tidak ada studi yang cocok.</p>
                 <p class="text-sm mt-1">Coba kata kunci lain, atau periksa kembali Patient ID / Accession Number.</p>
             </div>
-        @endif
+        </x-filament::section>
+    @endif
 
-        {{-- Results cards --}}
-        @if(count($studies) > 0)
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                @foreach($studies as $study)
-                    <x-study-card :study="$study" />
-                @endforeach
-            </div>
+    @if(count($studies) > 0)
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            @foreach($studies as $study)
+                <x-study-card :study="$study" />
+            @endforeach
+        </div>
 
-            {{-- Pagination --}}
-            <div class="flex items-center justify-between mt-4">
-                <span class="text-sm text-gray-500">Halaman {{ $page }}</span>
-                <div class="flex gap-2">
-                    <x-filament::button color="gray" size="sm" icon="heroicon-o-chevron-left"
-                        wire:click="prevPage" wire:loading.attr="disabled"
-                        :disabled="$page <= 1">
-                        Sebelumnya
-                    </x-filament::button>
-                    <x-filament::button color="gray" size="sm" icon-position="after" icon="heroicon-o-chevron-right"
-                        wire:click="nextPage" wire:loading.attr="disabled"
-                        :disabled="count($studies) < 10">
-                        Selanjutnya
-                    </x-filament::button>
-                </div>
+        <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+            <span class="text-sm text-gray-500">Halaman {{ $page }}</span>
+            <div class="flex gap-2">
+                <x-filament::button color="gray" size="sm" icon="heroicon-o-chevron-left"
+                    wire:click="prevPage" wire:loading.attr="disabled"
+                    :disabled="$page <= 1">
+                    Sebelumnya
+                </x-filament::button>
+                <x-filament::button color="gray" size="sm" icon-position="after" icon="heroicon-o-chevron-right"
+                    wire:click="nextPage" wire:loading.attr="disabled"
+                    :disabled="count($studies) < 10">
+                    Selanjutnya
+                </x-filament::button>
             </div>
-        @endif
-    </x-filament::section>
+        </div>
+    @endif
 </x-filament-panels::page>
