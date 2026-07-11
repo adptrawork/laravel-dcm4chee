@@ -15,6 +15,7 @@ use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Artisan;
 
 class WorklistItemResource extends Resource
 {
@@ -71,7 +72,38 @@ class WorklistItemResource extends Resource
             SelectFilter::make('modality')->options([
                 'CT' => 'CT', 'MR' => 'MRI', 'DX' => 'X-Ray', 'US' => 'US',
             ]),
-        ])->defaultSort('created_at', 'desc')->actions([
+        ])->defaultSort('created_at', 'desc')
+        ->headerActions([
+            Action::make('sync_status')
+                ->label('Sync Status from PACS')
+                ->icon('heroicon-o-arrow-path')
+                ->color('success')
+                ->requiresConfirmation()
+                ->modalHeading('Sync worklist status from PACS?')
+                ->modalDescription('Will query PACS for completed studies and update matching worklist items.')
+                ->action(function () {
+                    $exitCode = Artisan::call('worklist:sync-status');
+                    $output = Artisan::output();
+                    Notification::make()
+                        ->title($exitCode === 0 ? 'Sync completed' : 'Sync finished with warnings')
+                        ->body($output)
+                        ->{$exitCode === 0 ? 'success' : 'warning'}()
+                        ->send();
+                }),
+            Action::make('process_queue')
+                ->label('Process Queue (1 job)')
+                ->icon('heroicon-o-play')
+                ->color('gray')
+                ->action(function () {
+                    $exitCode = Artisan::call('queue:work', ['--once' => true, '--max-time' => 5]);
+                    $output = Artisan::output();
+                    Notification::make()
+                        ->title($exitCode === 0 ? 'Done' : 'Nothing to process')
+                        ->body($output ?: 'Queue is empty or sync mode is active')
+                        ->information()
+                        ->send();
+                }),
+        ])->actions([
             ActionGroup::make([
                 Action::make('publish_mwl')
                     ->label('Publish MWL')->icon('heroicon-o-cloud-arrow-up')
