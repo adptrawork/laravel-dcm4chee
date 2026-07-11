@@ -1,3 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@source '../../vendor/awcodes/filament-quick-create/resources/**/*.blade.php';
+@source '../../vendor/wire-elements/**/*.blade.php';

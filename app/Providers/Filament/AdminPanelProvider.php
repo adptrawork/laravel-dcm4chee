@@ -2,8 +2,11 @@
 
 namespace App\Providers\Filament;
 
+use Awcodes\QuickCreate\QuickCreatePlugin;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\Authenticate;
+use pxlrbt\FilamentEnvironmentIndicator\EnvironmentIndicatorPlugin;
+use pxlrbt\FilamentSpotlight\SpotlightPlugin;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -61,6 +64,14 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
-            ->plugin(FilamentShieldPlugin::make());
+            ->plugins([
+                FilamentShieldPlugin::make(),
+                QuickCreatePlugin::make()
+                    ->excludes([
+                        \App\Filament\Resources\UserResource::class,
+                    ]),
+                EnvironmentIndicatorPlugin::make(),
+                SpotlightPlugin::make(),
+            ]);
     }
 }

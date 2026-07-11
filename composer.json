@@ -7,10 +7,13 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "awcodes/filament-quick-create": "^4.0",
         "bezhansalleh/filament-shield": "^4.0",
         "filament/filament": "^4.0",
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0",
+        "pxlrbt/filament-environment-indicator": "^3.0",
+        "pxlrbt/filament-spotlight": "^2.0",
         "spatie/laravel-permission": "^7.0"
     },
     "require-dev": {
