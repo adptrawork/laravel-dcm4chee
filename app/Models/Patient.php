@@ -4,12 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Activitylog\Support\LogOptions;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class Patient extends Model
 {
-    use SoftDeletes, LogsActivity;
+    use SoftDeletes;
 
     protected $fillable = [
         'patient_id', 'name', 'date_of_birth', 'sex',
@@ -21,14 +19,6 @@ class Patient extends Model
         return [
             'date_of_birth' => 'date',
         ];
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['patient_id', 'name', 'date_of_birth', 'sex', 'phone'])
-            ->logOnlyDirty()
-            ->dontLogEmptyChanges();
     }
 
     protected static function boot(): void
@@ -47,6 +37,4 @@ class Patient extends Model
     {
         return $this->hasMany(Order::class);
     }
-
-
 }

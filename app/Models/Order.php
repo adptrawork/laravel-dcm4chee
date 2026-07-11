@@ -5,12 +5,10 @@ namespace App\Models;
 use App\Jobs\PushWorklistToPacsJob;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Activitylog\Support\LogOptions;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class Order extends Model
 {
-    use SoftDeletes, LogsActivity;
+    use SoftDeletes;
 
     const STATUS_PENDING = 'pending';
     const STATUS_SCHEDULED = 'scheduled';
@@ -51,14 +49,6 @@ class Order extends Model
         'requesting_physician', 'clinical_notes', 'status', 'priority',
         'scheduled_date',
     ];
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['accession_number', 'status', 'priority', 'modality', 'procedure_id', 'device_id', 'scheduled_date'])
-            ->logOnlyDirty()
-            ->dontLogEmptyChanges();
-    }
 
     protected function casts(): array
     {

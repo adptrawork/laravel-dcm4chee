@@ -3,12 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Support\LogOptions;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class WorklistItem extends Model
 {
-    use LogsActivity;
     const STATUS_REGISTERED = 'registered';
     const STATUS_MW_PUBLISHED = 'mw_published';
     const STATUS_TAKEN_BY_MODALITY = 'taken_by_modality';
@@ -72,14 +69,6 @@ class WorklistItem extends Model
         'taken_at', 'acquired_at', 'archived_at',
         'reported_at', 'verified_at', 'verified_by',
     ];
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['status', 'study_instance_uid', 'accession_number', 'error_message'])
-            ->logOnlyDirty()
-            ->dontLogEmptyChanges();
-    }
 
     protected function casts(): array
     {
