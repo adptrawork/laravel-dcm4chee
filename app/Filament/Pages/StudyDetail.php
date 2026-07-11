@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Pages;
 
 use App\Models\Server;
-use App\Services\Dcm4chee\SeriesService;
+use App\Services\Dcm4chee\StudyService;
 use App\Services\Dcm4chee\StudyService;
 use Filament\Pages\Page;
 
@@ -50,8 +50,8 @@ class StudyDetail extends Page
             $this->study = $results[0];
             $this->rawJson = json_encode($results, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
-            $seriesSvc = new SeriesService($this->server);
-            $this->series = $seriesSvc->getByStudyUid($studyUid);
+            $seriesSvc = new StudyService($this->server);
+            $this->series = $seriesSvc->getSeriesByStudyUid($studyUid);
         } catch (\Throwable $e) {
             $this->error = 'Failed to load study: ' . $e->getMessage();
         }

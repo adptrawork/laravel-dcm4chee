@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Dcm4chee;
 
+use App\Dto\SeriesData;
 use App\Models\Server;
 
 final class StudyService
@@ -96,6 +97,15 @@ final class StudyService
             'query' => ['viewport' => 256, 'dw' => 256, 'dh' => 256],
             'headers' => ['Accept' => 'image/jpeg'],
         ])->body();
+    }
+
+    public function getSeriesByStudyUid(string $studyUid): array
+    {
+        $data = $this->client->get("studies/{$studyUid}/series", headers: [
+            'Accept' => 'application/dicom+json',
+        ]);
+
+        return array_map(fn (array $s) => SeriesData::fromDicomJson($s), $data);
     }
 
     public function metadata(string $studyUid, string $seriesUid, string $instanceUid): array
