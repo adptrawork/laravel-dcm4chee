@@ -100,7 +100,7 @@ class WorklistItemResource extends Resource
                     Notification::make()
                         ->title($exitCode === 0 ? 'Done' : 'Nothing to process')
                         ->body($output ?: 'Queue is empty or sync mode is active')
-                        ->information()
+                        ->info()
                         ->send();
                 }),
         ])->actions([
