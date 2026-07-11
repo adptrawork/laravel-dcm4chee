@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\Dto;
 
 use App\Services\Dcm4chee\DicomHelper;
+use Livewire\Wireable;
 
-final class StudyData
+final class StudyData implements Wireable
 {
     public function __construct(
         public readonly ?string $patientName,
@@ -71,5 +72,27 @@ final class StudyData
         if (!$this->studyUid) return null;
         return config('services.ohif.url', 'http://localhost:3000')
             . '/viewer?StudyInstanceUIDs=' . $this->studyUid;
+    }
+
+    public function toLivewire(): array
+    {
+        return [
+            'patientName' => $this->patientName,
+            'patientId' => $this->patientId,
+            'studyDate' => $this->studyDate,
+            'studyTime' => $this->studyTime,
+            'studyDescription' => $this->studyDescription,
+            'accessionNumber' => $this->accessionNumber,
+            'modalities' => $this->modalities,
+            'series' => $this->series,
+            'instances' => $this->instances,
+            'studyUid' => $this->studyUid,
+            'referringPhysician' => $this->referringPhysician,
+        ];
+    }
+
+    public static function fromLivewire($value): static
+    {
+        return new static(...$value);
     }
 }

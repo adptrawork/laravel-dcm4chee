@@ -4,69 +4,21 @@
         <x-slot name="description">Cari studi imaging dari PACS berdasarkan pasien, tanggal, atau accession number</x-slot>
 
         <form wire:submit="search">
-            <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+                <x-filament::input.wrapper label="Nama Pasien">
+                    <x-filament::input type="text" placeholder="cth. Smith" wire:model="searchName" />
+                </x-filament::input.wrapper>
+                <x-filament::input.wrapper label="Patient ID">
+                    <x-filament::input type="text" placeholder="cth. MRN-001" wire:model="searchId" />
+                </x-filament::input.wrapper>
+                <x-filament::input.wrapper label="Tanggal Studi">
+                    <x-filament::input type="date" wire:model="searchDate" />
+                </x-filament::input.wrapper>
+                <x-filament::input.wrapper label="Accession No.">
+                    <x-filament::input type="text" placeholder="cth. ACC-2026..." wire:model="searchAccession" />
+                </x-filament::input.wrapper>
+            </div>
 
-    <div class="grid grid-cols-12 gap-4">
-
-        {{-- Patient Name --}}
-        <div class="col-span-12 md:col-span-6 xl:col-span-3">
-            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Nama Pasien
-            </label>
-
-            <x-filament::input.wrapper prefix-icon="heroicon-m-user">
-                <x-filament::input
-                    wire:model.live.debounce.500ms="searchName"
-                    placeholder="Cari nama pasien..."
-                />
-            </x-filament::input.wrapper>
-        </div>
-
-        {{-- Patient ID --}}
-        <div class="col-span-12 md:col-span-6 xl:col-span-3">
-            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Patient ID
-            </label>
-
-            <x-filament::input.wrapper prefix-icon="heroicon-m-identification">
-                <x-filament::input
-                    wire:model.live.debounce.500ms="searchId"
-                    placeholder="MRN-00001"
-                />
-            </x-filament::input.wrapper>
-        </div>
-
-        {{-- Study Date --}}
-        <div class="col-span-12 md:col-span-6 xl:col-span-3">
-            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Tanggal Studi
-            </label>
-
-            <x-filament::input.wrapper prefix-icon="heroicon-m-calendar-days">
-                <x-filament::input
-                    type="date"
-                    wire:model.live="searchDate"
-                />
-            </x-filament::input.wrapper>
-        </div>
-
-        {{-- Accession --}}
-        <div class="col-span-12 md:col-span-6 xl:col-span-3">
-            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Accession Number
-            </label>
-
-            <x-filament::input.wrapper prefix-icon="heroicon-m-hashtag">
-                <x-filament::input
-                    wire:model.live.debounce.500ms="searchAccession"
-                    placeholder="ACC-20260001"
-                />
-            </x-filament::input.wrapper>
-        </div>
-
-    </div>
-
-</div>
             <div class="flex items-center gap-2">
                 <x-filament::button type="submit" icon="heroicon-o-magnifying-glass"
                     wire:loading.attr="disabled" wire:target="search,loadStudies">
