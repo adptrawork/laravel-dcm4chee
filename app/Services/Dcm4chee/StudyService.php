@@ -97,4 +97,11 @@ final class StudyService
             'headers' => ['Accept' => 'image/jpeg'],
         ])->body();
     }
+
+    public function metadata(string $studyUid, string $seriesUid, string $instanceUid): array
+    {
+        return $this->client->get("studies/{$studyUid}/series/{$seriesUid}/instances/{$instanceUid}/metadata", headers: [
+            'Accept' => 'application/dicom+json',
+        ]);
+    }
 }

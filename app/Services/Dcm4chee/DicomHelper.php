@@ -149,6 +149,11 @@ final class DicomHelper
         return array_map(fn (array $s) => StudyData::fromDicomJson($s), $studies);
     }
 
+    public static function flattenPatient(array $patient): array
+    {
+        return self::flattenSingle($patient, self::PATIENT_TAGS);
+    }
+
     public static function flattenSeries(array $series): array
     {
         return array_map(fn ($s) => self::flattenSingle($s, self::SERIES_TAGS), $series);
