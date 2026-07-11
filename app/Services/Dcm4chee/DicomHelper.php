@@ -201,15 +201,5 @@ final class DicomHelper
         };
     }
 
-    public static function normalizeModalities(array|string|null $modalities): array
-    {
-        if ($modalities === null || $modalities === '-') return [];
-        if (is_string($modalities)) return [$modalities];
-        return $modalities;
-    }
 
-    public static function prettyJson(array $data): string
-    {
-        return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-    }
 }

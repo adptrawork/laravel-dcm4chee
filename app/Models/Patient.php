@@ -48,13 +48,5 @@ class Patient extends Model
         return $this->hasMany(Order::class);
     }
 
-    public function scopeSearchByName($query, string $name)
-    {
-        return $query->where('name', 'like', "%{$name}%");
-    }
 
-    public function scopeSearchByPatientId($query, string $patientId)
-    {
-        return $query->where('patient_id', 'like', "%{$patientId}%");
-    }
 }

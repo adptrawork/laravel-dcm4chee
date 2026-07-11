@@ -108,23 +108,5 @@ class WorklistItem extends Model
         return $this->belongsTo(User::class, 'verified_by');
     }
 
-    public function scopeByStatus($query, string $status)
-    {
-        return $query->where('status', $status);
-    }
 
-    public function scopeByServer($query, $serverId)
-    {
-        return $query->where('server_id', $serverId);
-    }
-
-    public static function statusLabel(string $status): string
-    {
-        return self::STATUS_LABELS[$status] ?? ucfirst($status);
-    }
-
-    public static function statusColor(string $status): string
-    {
-        return self::STATUS_COLORS[$status] ?? 'bg-gray-100 text-gray-700';
-    }
 }
