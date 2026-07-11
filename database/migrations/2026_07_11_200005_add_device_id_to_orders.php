@@ -13,14 +13,12 @@ return new class extends Migration
         Schema::table('orders', function (Blueprint $table): void {
             $table->foreignId('device_id')->nullable()->after('procedure_id')
                 ->constrained()->nullOnDelete();
-            $table->dropColumn('station_ae_title');
         });
     }
 
     public function down(): void
     {
         Schema::table('orders', function (Blueprint $table): void {
-            $table->string('station_ae_title')->nullable()->after('scheduled_date');
             $table->dropForeign(['device_id']);
             $table->dropColumn('device_id');
         });
