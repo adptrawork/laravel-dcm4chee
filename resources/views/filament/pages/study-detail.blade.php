@@ -1,29 +1,27 @@
 <x-filament-panels::page>
     @if($error)
-        <div class="p-4 text-sm text-danger-700 bg-danger-50 rounded-lg mb-4">
-            <x-filament::icon name="heroicon-o-exclamation-triangle" class="w-5 h-5 inline mr-1" />
-            {{ $error }}
-        </div>
-        <a href="{{ url('/admin/studies') }}" class="text-primary-600 hover:underline text-sm">&larr; Kembali ke Study Browser</a>
+        <x-filament::section>
+            <div class="flex items-center gap-2 text-sm text-danger-700">
+                <x-filament::icon name="heroicon-o-exclamation-triangle" class="w-5 h-5" />
+                {{ $error }}
+            </div>
+            <a href="{{ url('/admin/study-browser') }}" class="text-primary-600 hover:underline text-sm">&larr; Kembali</a>
+        </x-filament::section>
     @elseif($study)
-        {{-- Tab navigation --}}
-        <div class="border-b border-gray-200 mb-4">
-            <nav class="flex gap-4">
-                <button wire:click="$set('activeTab', 'overview')" class="pb-2 text-sm font-medium border-b-2 transition-colors {{ $activeTab === 'overview' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
-                    Overview
-                </button>
-                <button wire:click="$set('activeTab', 'series')" class="pb-2 text-sm font-medium border-b-2 transition-colors {{ $activeTab === 'series' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
-                    Series ({{ count($series) }})
-                </button>
-                <button wire:click="$set('activeTab', 'metadata')" class="pb-2 text-sm font-medium border-b-2 transition-colors {{ $activeTab === 'metadata' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
-                    Raw Metadata
-                </button>
-            </nav>
-        </div>
+        <x-filament::tabs>
+            <x-filament::tabs.item wire:click="$set('activeTab', 'overview')" :active="$activeTab === 'overview'" icon="heroicon-o-information-circle">
+                Overview
+            </x-filament::tabs.item>
+            <x-filament::tabs.item wire:click="$set('activeTab', 'series')" :active="$activeTab === 'series'" icon="heroicon-o-list-bullet" :badge="count($series)">
+                Series
+            </x-filament::tabs.item>
+            <x-filament::tabs.item wire:click="$set('activeTab', 'metadata')" :active="$activeTab === 'metadata'" icon="heroicon-o-code-bracket">
+                Metadata
+            </x-filament::tabs.item>
+        </x-filament::tabs>
 
-        {{-- Overview tab --}}
         @if($activeTab === 'overview')
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <x-filament::section>
                     <x-slot name="heading">Patient</x-slot>
                     <dl class="space-y-2 text-sm">
@@ -62,7 +60,7 @@
                         @if($study->studyDescription)
                         <div class="flex justify-between">
                             <dt class="text-gray-500">Description</dt>
-                            <dd class="text-right max-w-[200px] truncate">{{ $study->studyDescription }}</dd>
+                            <dd class="truncate max-w-[250px]">{{ $study->studyDescription }}</dd>
                         </div>
                         @endif
                         <div class="flex justify-between">
@@ -73,17 +71,9 @@
                             <dt class="text-gray-500">Series / Instances</dt>
                             <dd>{{ $study->series }} / {{ $study->instances }}</dd>
                         </div>
-                    </dl>
-                </x-filament::section>
-            </div>
-
-            <div class="mt-4">
-                <x-filament::section>
-                    <x-slot name="heading">DICOM Identifiers</x-slot>
-                    <dl class="space-y-2 text-sm">
                         <div class="flex justify-between">
                             <dt class="text-gray-500">Study UID</dt>
-                            <dd class="font-mono text-xs max-w-[350px] truncate">{{ $study->studyUid ?? '-' }}</dd>
+                            <dd class="font-mono text-xs truncate max-w-[300px]">{{ $study->studyUid ?? '-' }}</dd>
                         </div>
                     </dl>
                 </x-filament::section>
@@ -94,47 +84,47 @@
             </div>
         @endif
 
-        {{-- Series tab --}}
         @if($activeTab === 'series')
-            <x-filament::section>
-                <x-slot name="heading">Series List</x-slot>
-                @if(count($series) > 0)
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
+            <div class="mt-4">
+                <x-filament::section>
+                    <x-slot name="heading">Series</x-slot>
+                    @if(count($series) > 0)
+                        <table class="w-full">
                             <thead>
                                 <tr class="border-b border-gray-200">
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-16">#</th>
                                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Modality</th>
-                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Instances</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-24">Modality</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase w-24">Instances</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
                                 @foreach($series as $s)
                                     <tr class="hover:bg-gray-50">
-                                        <td class="px-3 py-2 font-mono">{{ $s->seriesNumber ?? '-' }}</td>
-                                        <td class="px-3 py-2">{{ $s->seriesDescription ?? '-' }}</td>
-                                        <td class="px-3 py-2">
+                                        <td class="px-3 py-2.5 font-mono text-sm">{{ $s->seriesNumber ?? '-' }}</td>
+                                        <td class="px-3 py-2.5 text-sm">{{ $s->seriesDescription ?? '-' }}</td>
+                                        <td class="px-3 py-2.5">
                                             <x-modality-badge :label="$s->modality ?? '?'" :color="$s->modalityColor()" />
                                         </td>
-                                        <td class="px-3 py-2 text-right">{{ $s->instances }}</td>
+                                        <td class="px-3 py-2.5 text-sm text-right tabular-nums">{{ $s->instances }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
-                    </div>
-                @else
-                    <p class="text-gray-400 text-sm py-4 text-center">No series found</p>
-                @endif
-            </x-filament::section>
+                    @else
+                        <p class="text-gray-400 text-sm py-4 text-center">No series found</p>
+                    @endif
+                </x-filament::section>
+            </div>
         @endif
 
-        {{-- Metadata tab --}}
         @if($activeTab === 'metadata')
-            <x-filament::section>
-                <x-slot name="heading">Raw DICOM JSON</x-slot>
-                <pre class="text-xs text-gray-700 bg-gray-50 p-4 rounded-lg overflow-x-auto max-h-[600px]">{{ $rawJson }}</pre>
-            </x-filament::section>
+            <div class="mt-4">
+                <x-filament::section>
+                    <x-slot name="heading">Raw DICOM JSON</x-slot>
+                    <pre class="text-xs text-gray-700 bg-gray-50 p-4 rounded-lg overflow-x-auto max-h-[600px] leading-relaxed">{{ $rawJson }}</pre>
+                </x-filament::section>
+            </div>
         @endif
     @endif
 </x-filament-panels::page>

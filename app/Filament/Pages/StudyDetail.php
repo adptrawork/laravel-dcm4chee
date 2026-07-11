@@ -48,9 +48,7 @@ class StudyDetail extends Page
 
             $this->study = $results[0];
             $this->rawJson = json_encode($results, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-
-            $seriesSvc = new StudyService($this->server);
-            $this->series = $seriesSvc->getSeriesByStudyUid($studyUid);
+            $this->series = $svc->getSeriesByStudyUid($studyUid);
         } catch (\Throwable $e) {
             $this->error = 'Failed to load study: ' . $e->getMessage();
         }
