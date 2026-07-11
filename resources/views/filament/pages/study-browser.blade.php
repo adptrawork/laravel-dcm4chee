@@ -4,22 +4,9 @@
         <x-slot name="description">Cari studi imaging dari PACS berdasarkan pasien, tanggal, atau accession number</x-slot>
 
         <form wire:submit="search">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
-                <x-filament::input.wrapper label="Nama Pasien">
-                    <x-filament::input type="text" placeholder="cth. Smith" wire:model="searchName" />
-                </x-filament::input.wrapper>
-                <x-filament::input.wrapper label="Patient ID">
-                    <x-filament::input type="text" placeholder="cth. MRN-001" wire:model="searchId" />
-                </x-filament::input.wrapper>
-                <x-filament::input.wrapper label="Tanggal Studi">
-                    <x-filament::input type="date" wire:model="searchDate" />
-                </x-filament::input.wrapper>
-                <x-filament::input.wrapper label="Accession No.">
-                    <x-filament::input type="text" placeholder="cth. ACC-2026..." wire:model="searchAccession" />
-                </x-filament::input.wrapper>
-            </div>
+            {{ $this->form }}
 
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 mt-3">
                 <x-filament::button type="submit" icon="heroicon-o-magnifying-glass"
                     wire:loading.attr="disabled" wire:target="search,loadStudies">
                     <span wire:loading.remove wire:target="search,loadStudies">Cari</span>

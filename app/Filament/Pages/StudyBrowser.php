@@ -6,7 +6,11 @@ namespace App\Filament\Pages;
 
 use App\Models\Server;
 use App\Services\Dcm4chee\StudyService;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\TextInput;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Schema;
 
 final class StudyBrowser extends Page
 {
@@ -28,6 +32,27 @@ final class StudyBrowser extends Page
     public static function canView(): bool
     {
         return auth()->user()?->can('view_studies') ?? false;
+    }
+
+    public function form(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                Grid::make(4)
+                    ->schema([
+                        TextInput::make('searchName')
+                            ->label('Nama Pasien')
+                            ->placeholder('cth. Smith'),
+                        TextInput::make('searchId')
+                            ->label('Patient ID')
+                            ->placeholder('cth. MRN-001'),
+                        DatePicker::make('searchDate')
+                            ->label('Tanggal Studi'),
+                        TextInput::make('searchAccession')
+                            ->label('Accession No.')
+                            ->placeholder('cth. ACC-2026...'),
+                    ]),
+            ]);
     }
 
     public function mount(): void
