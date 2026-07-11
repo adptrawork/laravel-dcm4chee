@@ -39,6 +39,8 @@ class Server extends Model
 
     public function getKeycloakUrlAttribute(): string
     {
-        return preg_replace('/:\d+$/', ':8843', rtrim($this->base_url, '/'));
+        $url = preg_replace('/:\d+$/', ':8843', rtrim($this->base_url, '/'));
+
+        return str_replace('http://', 'https://', $url);
     }
 }

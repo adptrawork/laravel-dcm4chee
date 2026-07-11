@@ -22,6 +22,11 @@ class ProcedureResource extends Resource
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-list-bullet';
     protected static string|\UnitEnum|null $navigationGroup = 'Configuration';
 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->can('manage_procedures') ?? false;
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([

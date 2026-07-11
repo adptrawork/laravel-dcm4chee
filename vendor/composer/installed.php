@@ -3,13 +3,22 @@
         'name' => 'laravel/laravel',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '366be18b67f5c3c8eb12d383d2afaee1105fabd8',
+        'reference' => 'b11071f31086a21a594508786a06243b4d0f318e',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
         'dev' => true,
     ),
     'versions' => array(
+        'althinect/filament-spatie-roles-permissions' => array(
+            'pretty_version' => 'v3.3.3',
+            'version' => '3.3.3.0',
+            'reference' => '7dbe7ad734fb24df890b616a274e2c18e903181f',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../althinect/filament-spatie-roles-permissions',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'anourvalar/eloquent-serialize' => array(
             'pretty_version' => '1.3.10',
             'version' => '1.3.10.0',
@@ -589,7 +598,7 @@
         'laravel/laravel' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '366be18b67f5c3c8eb12d383d2afaee1105fabd8',
+            'reference' => 'b11071f31086a21a594508786a06243b4d0f318e',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

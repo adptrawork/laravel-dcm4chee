@@ -20,6 +20,11 @@ class Registration extends Page
     public ?array $data = [];
     public ?string $result = null;
 
+    public static function canView(): bool
+    {
+        return auth()->user()?->can('create_order') ?? false;
+    }
+
     public function mount(): void
     {
         $this->form->fill();

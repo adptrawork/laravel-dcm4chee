@@ -18,6 +18,11 @@ class DeviceResource extends Resource
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-cpu-chip';
     protected static string|\UnitEnum|null $navigationGroup = 'Configuration';
 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->can('manage_devices') ?? false;
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([

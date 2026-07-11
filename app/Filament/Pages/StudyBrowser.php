@@ -27,6 +27,11 @@ class StudyBrowser extends Page implements HasTable
     public string $searchDate = '';
     public string $searchAccession = '';
 
+    public static function canView(): bool
+    {
+        return auth()->user()?->can('view_studies') ?? false;
+    }
+
     public function mount(): void
     {
         $this->server = Server::where('enabled', true)->first();

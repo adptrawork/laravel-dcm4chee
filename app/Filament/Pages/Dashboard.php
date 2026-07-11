@@ -13,6 +13,11 @@ class Dashboard extends Page
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-home';
     protected static ?int $navigationSort = 0;
 
+    public static function canView(): bool
+    {
+        return auth()->user()?->can('view_dashboard') ?? false;
+    }
+
     public int $totalStudies = 0;
     public int $totalPatients = 0;
     public int $pendingWorklist = 0;

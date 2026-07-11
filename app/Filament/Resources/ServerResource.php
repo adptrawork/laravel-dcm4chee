@@ -21,6 +21,11 @@ class ServerResource extends Resource
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-server-stack';
     protected static string|\UnitEnum|null $navigationGroup = 'Configuration';
 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->can('manage_servers') ?? false;
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
