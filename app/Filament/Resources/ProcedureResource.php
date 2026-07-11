@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ProcedureResource\Pages;
 use App\Models\Procedure;
 use Filament\Forms\Components\Section;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -26,6 +27,10 @@ class ProcedureResource extends Resource
     {
         return auth()->user()?->can('manage_procedures') ?? false;
     }
+
+    public static function canCreate(): bool { return static::canViewAny(); }
+    public static function canEdit(Model $record): bool { return static::canViewAny(); }
+    public static function canDelete(Model $record): bool { return static::canViewAny(); }
 
     public static function form(Schema $schema): Schema
     {

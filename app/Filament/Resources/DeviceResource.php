@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\DeviceResource\Pages;
 use App\Models\Device;
 use Filament\Forms\Components\Select;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -22,6 +23,10 @@ class DeviceResource extends Resource
     {
         return auth()->user()?->can('manage_devices') ?? false;
     }
+
+    public static function canCreate(): bool { return static::canViewAny(); }
+    public static function canEdit(Model $record): bool { return static::canViewAny(); }
+    public static function canDelete(Model $record): bool { return static::canViewAny(); }
 
     public static function form(Schema $schema): Schema
     {

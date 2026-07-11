@@ -9,6 +9,7 @@ use App\Models\Device;
 use App\Models\Order;
 use App\Models\Patient;
 use Filament\Actions\EditAction;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\RichEditor;
@@ -36,6 +37,10 @@ class OrderResource extends Resource
     {
         return auth()->user()?->can('view_worklist') ?? false;
     }
+
+    public static function canCreate(): bool { return auth()->user()?->can('create_order') ?? false; }
+    public static function canEdit(Model $record): bool { return auth()->user()?->can('edit_order') ?? false; }
+    public static function canDelete(Model $record): bool { return false; }
 
     public static function form(Schema $schema): Schema
     {

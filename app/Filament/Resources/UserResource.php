@@ -9,6 +9,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Actions\EditAction;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -22,6 +23,10 @@ class UserResource extends Resource
     {
         return auth()->user()?->can('manage_users') ?? false;
     }
+
+    public static function canCreate(): bool { return static::canViewAny(); }
+    public static function canEdit(Model $record): bool { return static::canViewAny(); }
+    public static function canDelete(Model $record): bool { return static::canViewAny(); }
 
     public static function form(Schema $schema): Schema
     {
