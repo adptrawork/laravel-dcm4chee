@@ -11,9 +11,10 @@ class DatabaseSeeder extends Seeder
     {
         User::factory()->create([
             'name' => 'Admin',
-            'email' => 'admin@dcm4che.org',
+            'email' => 'admin@testing.com',
         ]);
 
         $this->call(ServerSeeder::class);
+        $this->call(DefaultDataSeeder::class);
     }
 }

@@ -4,7 +4,6 @@ namespace App\Services\Dcm4chee;
 
 use App\Models\AuditLog;
 use App\Models\Server;
-use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 
@@ -49,7 +48,7 @@ class Client
         ]);
     }
 
-    public function raw(string $method, string $path, array $options = []): \Illuminate\Http\Client\Response
+    public function raw(string $method, string $path, array $options = [], ?string $prefix = null): \Illuminate\Http\Client\Response
     {
         $token = $this->auth->getToken();
 
@@ -64,7 +63,11 @@ class Client
                 'verify' => $this->server->ssl_verify,
             ]);
 
-        $url = $this->server->api_base_url . '/' . ltrim($path, '/');
+        $base = $this->server->api_base_url;
+        if ($prefix !== null) {
+            $base = str_replace('/aets/DCM4CHEE/rs', '/aets/DCM4CHEE/' . $prefix, $base);
+        }
+        $url = $base . '/' . ltrim($path, '/');
 
         $start = microtime(true);
         $response = $request->send($method, $url, $options);

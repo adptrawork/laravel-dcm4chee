@@ -81,23 +81,6 @@ class DicomHelper
         return $val;
     }
 
-    public static function flattenPatient(array $dicomJson): array
-    {
-        $result = [];
-
-        foreach (self::PATIENT_TAGS as $key => $meta) {
-            $value = self::extractValue($dicomJson, $meta['tag']);
-
-            if ($meta['vr'] === 'PN' && is_array($value)) {
-                $result[$key] = $value['Alphabetic'] ?? json_encode($value);
-            } else {
-                $result[$key] = $value;
-            }
-        }
-
-        return $result;
-    }
-
     public static function flattenStudies(array $studies): array
     {
         return array_map(fn ($s) => self::flattenSingle($s, self::STUDY_TAGS), $studies);

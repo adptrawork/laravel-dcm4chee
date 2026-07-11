@@ -41,9 +41,11 @@ class StudyService
             $query['StudyInstanceUID'] = $studyUid;
         }
 
-        return $this->client->get('studies', $query, [
+        $data = $this->client->get('studies', $query, [
             'Accept' => 'application/dicom+json',
         ]);
+
+        return DicomHelper::flattenStudies($data);
     }
 
     public function series(string $studyUid): array
