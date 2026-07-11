@@ -57,10 +57,4 @@ class StudyDetail extends Page
         }
     }
 
-    public function getViewUrl(): ?string
-    {
-        if (!$this->study?->studyUid) return null;
-        return config('services.ohif.url', 'http://localhost:3000')
-            . '/viewer?StudyInstanceUIDs=' . $this->study->studyUid;
-    }
 }
