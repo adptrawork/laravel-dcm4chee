@@ -8,7 +8,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Tables\Actions\EditAction;
+use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -16,7 +16,7 @@ class DeviceResource extends Resource
 {
     protected static ?string $model = Device::class;
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-cpu-chip';
-    protected static string|\UnitEnum|null $navigationGroup = 'Configuration';
+    protected static string|\UnitEnum|null $navigationGroup = 'Administration';
 
     public static function canViewAny(): bool
     {
@@ -28,11 +28,16 @@ class DeviceResource extends Resource
         return $schema->schema([
             Select::make('server_id')->relationship('server', 'name')->required(),
             TextInput::make('name')->required(),
-            TextInput::make('ae_title')->required()->label('AE Title'),
-            TextInput::make('hostname'),
-            TextInput::make('port')->numeric(),
-            TextInput::make('modality'),
-            Select::make('status')->options(['active' => 'Active', 'inactive' => 'Inactive']),
+            TextInput::make('ae_title')->required()->label('AE Title')->maxLength(16)->regex('/^[A-Z0-9_]+$/'),
+            TextInput::make('hostname')->maxLength(255),
+            TextInput::make('port')->numeric()->minValue(1)->maxValue(65535),
+            Select::make('modality')->options([
+                'CT' => 'CT', 'MR' => 'MRI', 'DX' => 'X-Ray', 'CR' => 'CR',
+                'US' => 'Ultrasound', 'XA' => 'Angiography', 'NM' => 'Nuclear Medicine', 'OT' => 'Other',
+            ]),
+            Select::make('status')->options([
+                'unknown' => 'Unknown', 'active' => 'Active', 'inactive' => 'Inactive',
+            ])->default('unknown'),
         ]);
     }
 

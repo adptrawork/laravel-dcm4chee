@@ -21,7 +21,10 @@ class DefaultDataSeeder extends Seeder
         ];
 
         foreach ($procedures as $p) {
-            Procedure::create($p + ['is_active' => true]);
+            Procedure::firstOrCreate(
+                ['code' => $p['code']],
+                $p + ['is_active' => true],
+            );
         }
     }
 }

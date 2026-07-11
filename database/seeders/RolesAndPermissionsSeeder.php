@@ -11,31 +11,29 @@ class RolesAndPermissionsSeeder extends Seeder
 {
     public function run(): void
     {
-        Permission::create(['name' => 'view_dashboard']);
-        Permission::create(['name' => 'view_studies']);
-        Permission::create(['name' => 'view_worklist']);
-        Permission::create(['name' => 'create_order']);
-        Permission::create(['name' => 'edit_order']);
-        Permission::create(['name' => 'write_report']);
-        Permission::create(['name' => 'verify_report']);
-        Permission::create(['name' => 'manage_servers']);
-        Permission::create(['name' => 'manage_devices']);
-        Permission::create(['name' => 'manage_procedures']);
-        Permission::create(['name' => 'manage_users']);
+        $permissions = [
+            'view_dashboard', 'view_studies', 'view_worklist',
+            'create_order', 'edit_order', 'write_report', 'verify_report',
+            'manage_servers', 'manage_devices', 'manage_procedures', 'manage_users',
+        ];
 
-        $admin = Role::create(['name' => 'admin']);
-        $admin->givePermissionTo(Permission::all());
+        foreach ($permissions as $name) {
+            Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
+        }
 
-        $radiologist = Role::create(['name' => 'radiologist']);
-        $radiologist->givePermissionTo(['view_dashboard', 'view_studies', 'view_worklist',
+        $admin = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        $admin->syncPermissions(Permission::pluck('name')->all());
+
+        $radiologist = Role::firstOrCreate(['name' => 'radiologist', 'guard_name' => 'web']);
+        $radiologist->syncPermissions(['view_dashboard', 'view_studies', 'view_worklist',
             'create_order', 'write_report', 'verify_report']);
 
-        $radiographer = Role::create(['name' => 'radiographer']);
-        $radiographer->givePermissionTo(['view_dashboard', 'view_worklist',
+        $radiographer = Role::firstOrCreate(['name' => 'radiographer', 'guard_name' => 'web']);
+        $radiographer->syncPermissions(['view_dashboard', 'view_worklist',
             'create_order', 'edit_order']);
 
-        $dokter = Role::create(['name' => 'dokter']);
-        $dokter->givePermissionTo(['view_studies', 'view_worklist']);
+        $dokter = Role::firstOrCreate(['name' => 'dokter', 'guard_name' => 'web']);
+        $dokter->syncPermissions(['view_studies', 'view_worklist']);
 
         $user = User::where('email', 'admin@admin.com')->first();
         if ($user) {

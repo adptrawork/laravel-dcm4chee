@@ -1,31 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Pages;
 
 use App\Models\Server;
-use App\Services\Dcm4chee\DicomHelper;
 use App\Services\Dcm4chee\StudyService;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Concerns\InteractsWithTable;
-use Filament\Tables\Contracts\HasTable;
-use Filament\Tables\Table;
 use Filament\Pages\Page;
 
-class StudyBrowser extends Page implements HasTable
+final class StudyBrowser extends Page
 {
-    use InteractsWithTable;
-
     protected string $view = 'filament.pages.study-browser';
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-magnifying-glass';
-    protected static string|\UnitEnum|null $navigationGroup = 'Operations';
-    protected static ?int $navigationSort = 2;
+    protected static string|\UnitEnum|null $navigationGroup = 'Imaging';
+    protected static ?int $navigationSort = 0;
 
     public ?Server $server = null;
     public string $searchName = '';
     public string $searchId = '';
     public string $searchDate = '';
     public string $searchAccession = '';
+    public array $studies = [];
+    public bool $searched = false;
+    public ?string $error = null;
+    public int $page = 1;
 
     public static function canView(): bool
     {
@@ -37,35 +35,73 @@ class StudyBrowser extends Page implements HasTable
         $this->server = Server::where('enabled', true)->first();
     }
 
-    public function table(Table $table): Table
+    public function search(): void
     {
-        $svc = $this->server ? new StudyService($this->server) : null;
-        return $table->query(
-            $svc ? $svc->search(...$this->getQueryParams()) : collect()
-        )->columns([
-            TextColumn::make('PatientName')->label('Patient')->searchable(),
-            TextColumn::make('PatientID')->label('ID')->searchable(),
-            TextColumn::make('StudyDate')->label('Date'),
-            TextColumn::make('ModalitiesInStudy')->label('Modality'),
-            TextColumn::make('AccessionNumber')->label('Accession'),
-            TextColumn::make('StudyDescription')->label('Description'),
-        ])->actions([
-            Action::make('view_ohif')
-                ->label('View')
-                ->icon('heroicon-o-eye')
-                ->color('primary')
-                ->url(fn (array $record): string => 'http://localhost:3000/viewer?StudyInstanceUIDs=' . ($record['StudyInstanceUID'] ?? ''))
-                ->openUrlInNewTab(),
-        ]);
+        $this->error = null;
+        $this->studies = [];
+        $this->page = 1;
+        $this->loadStudies();
     }
 
-    protected function getQueryParams(): array
+    public function loadStudies(): void
     {
-        return [
-            $this->searchName ?: null,
-            $this->searchId ?: null,
-            $this->searchDate ?: null,
-            $this->searchAccession ?: null,
-        ];
+        if (!$this->server) {
+            $this->error = 'No PACS server configured';
+            return;
+        }
+
+        $svc = new StudyService($this->server);
+        $date = $this->searchDate ? str_replace('-', '', $this->searchDate) : null;
+        $limit = 10;
+        $offset = ($this->page - 1) * $limit;
+
+        try {
+            $results = $svc->search(
+                patientName: $this->searchName ?: null,
+                patientId: $this->searchId ?: null,
+                studyDate: $date,
+                accessionNumber: $this->searchAccession ?: null,
+                limit: $limit,
+                offset: $offset,
+            );
+
+            if (empty($results) && $this->page > 1) {
+                $this->page--;
+                return;
+            }
+
+            $this->studies = $results;
+        } catch (\Throwable $e) {
+            $this->error = 'PACS query failed: ' . $e->getMessage();
+            $this->studies = [];
+        }
+
+        $this->searched = true;
+    }
+
+    public function nextPage(): void
+    {
+        $this->page++;
+        $this->loadStudies();
+    }
+
+    public function prevPage(): void
+    {
+        if ($this->page > 1) {
+            $this->page--;
+            $this->loadStudies();
+        }
+    }
+
+    public function resetSearch(): void
+    {
+        $this->searchName = '';
+        $this->searchId = '';
+        $this->searchDate = '';
+        $this->searchAccession = '';
+        $this->studies = [];
+        $this->searched = false;
+        $this->error = null;
+        $this->page = 1;
     }
 }

@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class WorklistItem extends Model
 {
+    use LogsActivity;
     const STATUS_REGISTERED = 'registered';
     const STATUS_MW_PUBLISHED = 'mw_published';
     const STATUS_TAKEN_BY_MODALITY = 'taken_by_modality';
@@ -61,7 +64,7 @@ class WorklistItem extends Model
     ];
 
     protected $fillable = [
-        'server_id', 'accession_number', 'patient_name', 'patient_id',
+        'server_id', 'order_id', 'accession_number', 'patient_name', 'patient_id',
         'modality', 'procedure_code', 'procedure_description',
         'requested_procedure_id', 'sps_id', 'requesting_physician',
         'scheduled_date', 'scheduled_time', 'status', 'study_instance_uid',
@@ -69,6 +72,14 @@ class WorklistItem extends Model
         'taken_at', 'acquired_at', 'archived_at',
         'reported_at', 'verified_at', 'verified_by',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['status', 'study_instance_uid', 'accession_number', 'error_message'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
+    }
 
     protected function casts(): array
     {
@@ -85,6 +96,11 @@ class WorklistItem extends Model
     public function server()
     {
         return $this->belongsTo(Server::class);
+    }
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
     }
 
     public function verifier()

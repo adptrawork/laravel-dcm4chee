@@ -1,8 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Dcm4chee;
 
-class DicomHelper
+use App\Dto\StudyData;
+use App\Models\Device;
+
+final class DicomHelper
 {
     const PATIENT_TAGS = [
         'PatientName' => ['tag' => '00100010', 'vr' => 'PN'],
@@ -81,9 +86,67 @@ class DicomHelper
         return $val;
     }
 
+    public static function buildMwlJson(\App\Models\Order $order): array
+    {
+        $patient = $order->patient;
+        $json = [];
+
+        $json['00100010'] = ['vr' => 'PN', 'Value' => [['Alphabetic' => $patient->name]]];
+        $json['00100020'] = ['vr' => 'LO', 'Value' => [$patient->patient_id]];
+
+        if ($patient->date_of_birth) {
+            $json['00100030'] = ['vr' => 'DA', 'Value' => [$patient->date_of_birth->format('Ymd')]];
+        }
+        if ($patient->sex) {
+            $json['00100040'] = ['vr' => 'CS', 'Value' => [$patient->sex]];
+        }
+
+        $json['00080050'] = ['vr' => 'SH', 'Value' => [$order->accession_number]];
+
+        if ($order->requesting_physician) {
+            $json['00080090'] = ['vr' => 'PN', 'Value' => [['Alphabetic' => $order->requesting_physician]]];
+        }
+
+        $sps = ['00400020' => ['vr' => 'CS', 'Value' => ['SCHEDULED']]];
+
+        $modality = $order->modality ?? $order->procedure?->modality;
+        if ($modality) {
+            $sps['00400007'] = ['vr' => 'LO', 'Value' => [$modality]];
+        }
+
+        if ($order->requesting_physician) {
+            $json['00321032'] = ['vr' => 'PN', 'Value' => [['Alphabetic' => $order->requesting_physician]]];
+        }
+
+        $desc = $order->procedure?->name;
+        if ($desc) {
+            $json['00321060'] = ['vr' => 'LO', 'Value' => [$desc]];
+        }
+
+        // Required SPS fields — ScheduledStationAETitle
+        $stationAe = $order->device?->ae_title
+            ?? Device::where('modality', $modality)->where('status', 'active')->value('ae_title')
+            ?? 'DCM4CHEE';
+        $sps['00400001'] = ['vr' => 'AE', 'Value' => [$stationAe]];
+        $sps['00400009'] = ['vr' => 'SH', 'Value' => ['SPS-' . $order->accession_number]];
+
+        $date = $order->scheduled_date?->format('Ymd') ?? now()->format('Ymd');
+        $sps['00400002'] = ['vr' => 'DA', 'Value' => [$date]];
+        $sps['00400003'] = ['vr' => 'TM', 'Value' => ['000000']];
+
+        $json['00400100'] = ['vr' => 'SQ', 'Value' => [$sps]];
+
+        return $json;
+    }
+
     public static function flattenStudies(array $studies): array
     {
         return array_map(fn ($s) => self::flattenSingle($s, self::STUDY_TAGS), $studies);
+    }
+
+    public static function flattenToDto(array $studies): array
+    {
+        return array_map(fn (array $s) => StudyData::fromDicomJson($s), $studies);
     }
 
     public static function flattenSeries(array $series): array
@@ -106,6 +169,38 @@ class DicomHelper
         }
 
         return $result;
+    }
+
+    public static function formatPatientName(?string $rawName): string
+    {
+        if ($rawName === null || $rawName === '-') return '-';
+        if (!str_contains($rawName, '^')) return $rawName;
+        $parts = array_filter(explode('^', $rawName));
+        return implode(' ', array_reverse($parts));
+    }
+
+    public static function formatStudyDate(?string $rawDate): string
+    {
+        if ($rawDate === null || strlen($rawDate) !== 8) return $rawDate ?? '-';
+        return \Carbon\Carbon::createFromFormat('Ymd', $rawDate)->format('d/m/Y');
+    }
+
+    public static function modalityColor(string $modality): string
+    {
+        return match ($modality) {
+            'CT' => 'warning',
+            'MR' => 'info',
+            'CR', 'DX' => 'success',
+            'US' => 'danger',
+            default => 'gray',
+        };
+    }
+
+    public static function normalizeModalities(array|string|null $modalities): array
+    {
+        if ($modalities === null || $modalities === '-') return [];
+        if (is_string($modalities)) return [$modalities];
+        return $modalities;
     }
 
     public static function prettyJson(array $data): string

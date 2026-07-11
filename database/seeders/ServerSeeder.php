@@ -9,11 +9,13 @@ class ServerSeeder extends Seeder
 {
     public function run(): void
     {
-        Server::create([
-            'name' => 'Local DCM4CHEE',
-            'base_url' => 'http://host.docker.internal:8080',
-            'username' => 'admin',
-            'password' => \Illuminate\Support\Facades\Crypt::encryptString('changeit'),
-        ]);
+        Server::firstOrCreate(
+            ['name' => 'Local DCM4CHEE'],
+            [
+                'base_url' => 'http://host.docker.internal:8080',
+                'username' => 'admin',
+                'password' => \Illuminate\Support\Facades\Crypt::encryptString('changeit'),
+            ],
+        );
     }
 }

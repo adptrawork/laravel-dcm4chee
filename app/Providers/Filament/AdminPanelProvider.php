@@ -8,8 +8,9 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use App\Filament\Pages\Dashboard;
-use App\Filament\Pages\Registration;
+use App\Filament\Pages\PacsExplorer;
 use App\Filament\Pages\StudyBrowser;
+use App\Filament\Pages\StudyDetail;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -38,8 +39,9 @@ class AdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
                 Dashboard::class,
-                Registration::class,
                 StudyBrowser::class,
+                PacsExplorer::class,
+                StudyDetail::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([

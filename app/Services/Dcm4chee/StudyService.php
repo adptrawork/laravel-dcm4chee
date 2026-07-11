@@ -1,12 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Dcm4chee;
 
 use App\Models\Server;
 
-class StudyService
+final class StudyService
 {
     protected Client $client;
+    protected const int DEFAULT_LIMIT = 50;
 
     public function __construct(
         protected Server $server,
@@ -14,38 +17,56 @@ class StudyService
         $this->client = new Client($server);
     }
 
-    public function search(?string $patientName = null, ?string $patientId = null, ?string $studyDate = null, ?string $accessionNumber = null, ?string $studyUid = null, int $limit = 50, int $offset = 0): array
-    {
+    public function search(
+        ?string $patientName = null,
+        ?string $patientId = null,
+        ?string $studyDate = null,
+        ?string $accessionNumber = null,
+        ?string $studyUid = null,
+        int $limit = self::DEFAULT_LIMIT,
+        int $offset = 0,
+    ): array {
         $query = [
             'limit' => $limit,
             'offset' => $offset,
         ];
 
-        if ($patientName) {
-            $query['PatientName'] = $patientName;
-        }
-
-        if ($patientId) {
-            $query['PatientID'] = $patientId;
-        }
-
-        if ($studyDate) {
-            $query['StudyDate'] = $studyDate;
-        }
-
-        if ($accessionNumber) {
-            $query['AccessionNumber'] = $accessionNumber;
-        }
-
-        if ($studyUid) {
-            $query['StudyInstanceUID'] = $studyUid;
-        }
+        if ($patientName) $query['PatientName'] = $patientName;
+        if ($patientId) $query['PatientID'] = $patientId;
+        if ($studyDate) $query['StudyDate'] = $studyDate;
+        if ($accessionNumber) $query['AccessionNumber'] = $accessionNumber;
+        if ($studyUid) $query['StudyInstanceUID'] = $studyUid;
 
         $data = $this->client->get('studies', $query, [
             'Accept' => 'application/dicom+json',
         ]);
 
-        return DicomHelper::flattenStudies($data);
+        return DicomHelper::flattenToDto($data);
+    }
+
+    public function count(
+        ?string $patientName = null,
+        ?string $patientId = null,
+        ?string $studyDate = null,
+        ?string $accessionNumber = null,
+    ): int {
+        $query = ['limit' => 0, 'offset' => 0];
+
+        if ($patientName) $query['PatientName'] = $patientName;
+        if ($patientId) $query['PatientID'] = $patientId;
+        if ($studyDate) $query['StudyDate'] = $studyDate;
+        if ($accessionNumber) $query['AccessionNumber'] = $accessionNumber;
+
+        try {
+            $response = $this->client->raw('GET', 'studies', [
+                'query' => $query,
+                'headers' => ['Accept' => 'application/dicom+json'],
+            ]);
+            // DCM4CHEE returns total count in X-Total-Count header
+            return (int) ($response->header('X-Total-Count') ?? 0);
+        } catch (\Throwable) {
+            return 0;
+        }
     }
 
     public function series(string $studyUid): array
@@ -62,33 +83,18 @@ class StudyService
         ]);
     }
 
-    public function metadata(string $studyUid, string $seriesUid, string $instanceUid): array
-    {
-        return $this->client->get("studies/{$studyUid}/series/{$seriesUid}/instances/{$instanceUid}/metadata", headers: [
-            'Accept' => 'application/dicom+json',
-        ]);
-    }
-
     public function rendered(string $studyUid, string $seriesUid, string $instanceUid): string
     {
-        $response = $this->client->raw('GET', "studies/{$studyUid}/series/{$seriesUid}/instances/{$instanceUid}/rendered", [
-            'headers' => [
-                'Accept' => 'image/jpeg',
-            ],
-        ]);
-
-        return $response->body();
+        return $this->client->raw('GET', "studies/{$studyUid}/series/{$seriesUid}/instances/{$instanceUid}/rendered", [
+            'headers' => ['Accept' => 'image/jpeg'],
+        ])->body();
     }
 
     public function thumbnail(string $studyUid, string $seriesUid, string $instanceUid): string
     {
-        $response = $this->client->raw('GET', "studies/{$studyUid}/series/{$seriesUid}/instances/{$instanceUid}/rendered", [
+        return $this->client->raw('GET', "studies/{$studyUid}/series/{$seriesUid}/instances/{$instanceUid}/rendered", [
             'query' => ['viewport' => 256, 'dw' => 256, 'dh' => 256],
-            'headers' => [
-                'Accept' => 'image/jpeg',
-            ],
-        ]);
-
-        return $response->body();
+            'headers' => ['Accept' => 'image/jpeg'],
+        ])->body();
     }
 }

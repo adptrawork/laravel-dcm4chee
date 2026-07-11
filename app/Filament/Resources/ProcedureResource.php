@@ -11,7 +11,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Tables\Actions\EditAction;
+use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -20,7 +20,7 @@ class ProcedureResource extends Resource
 {
     protected static ?string $model = Procedure::class;
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-list-bullet';
-    protected static string|\UnitEnum|null $navigationGroup = 'Configuration';
+    protected static string|\UnitEnum|null $navigationGroup = 'Administration';
 
     public static function canViewAny(): bool
     {
@@ -31,8 +31,8 @@ class ProcedureResource extends Resource
     {
         return $schema->schema([
             Section::make()->columns(2)->schema([
-                TextInput::make('code')->required(),
-                TextInput::make('name')->required(),
+                TextInput::make('code')->required()->unique('procedures', 'code'),
+                TextInput::make('name')->required()->maxLength(255),
                 Textarea::make('description'),
                 Select::make('modality')->options([
                     'CT' => 'CT', 'MR' => 'MRI', 'DX' => 'X-Ray',

@@ -9,17 +9,19 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\ActionGroup;
-use Filament\Tables\Actions\EditAction;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class WorklistItemResource extends Resource
 {
     protected static ?string $model = WorklistItem::class;
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
-    protected static string|\UnitEnum|null $navigationGroup = 'Operations';
+    protected static string|\UnitEnum|null $navigationGroup = 'Clinical';
+    protected static ?int $navigationSort = 3;
 
     public static function canViewAny(): bool
     {
@@ -30,10 +32,13 @@ class WorklistItemResource extends Resource
     {
         return $schema->schema([
             Select::make('server_id')->relationship('server', 'name')->required(),
-            TextInput::make('accession_number')->required(),
-            TextInput::make('patient_name')->required(),
-            TextInput::make('patient_id')->required(),
-            TextInput::make('modality'),
+            TextInput::make('accession_number')->required()->maxLength(64),
+            TextInput::make('patient_name')->required()->maxLength(255),
+            TextInput::make('patient_id')->required()->maxLength(64),
+            Select::make('modality')->options([
+                'CT' => 'CT', 'MR' => 'MRI', 'DX' => 'X-Ray', 'CR' => 'CR',
+                'US' => 'Ultrasound', 'XA' => 'Angiography', 'NM' => 'Nuclear Medicine', 'OT' => 'Other',
+            ])->required(),
             TextInput::make('procedure_description'),
             Select::make('status')->options(WorklistItem::STATUS_LABELS),
         ]);
@@ -61,40 +66,52 @@ class WorklistItemResource extends Resource
             }),
             TextColumn::make('scheduled_date')->date(),
             TextColumn::make('created_at')->dateTime()->sortable(),
-        ])->actions([
+        ])->filters([
+            SelectFilter::make('status')->options(WorklistItem::STATUS_LABELS)->multiple(),
+            SelectFilter::make('modality')->options([
+                'CT' => 'CT', 'MR' => 'MRI', 'DX' => 'X-Ray', 'US' => 'US',
+            ]),
+        ])->defaultSort('created_at', 'desc')->actions([
             ActionGroup::make([
                 Action::make('publish_mwl')
                     ->label('Publish MWL')->icon('heroicon-o-cloud-arrow-up')
-                    ->color('info')->visible(fn ($r) => $r->status === 'registered')
-                    ->action(fn ($r) => $r->update(['status' => 'mw_published'])),
+                    ->color('info')
+                    ->visible(fn (WorklistItem $record): bool => $record->status === WorklistItem::STATUS_REGISTERED)
+                    ->action(fn (WorklistItem $record) => $record->update(['status' => WorklistItem::STATUS_MW_PUBLISHED])),
                 Action::make('mark_taken')
                     ->label('Taken by Modality')->icon('heroicon-o-camera')
-                    ->color('primary')->visible(fn ($r) => $r->status === 'mw_published')
-                    ->action(fn ($r) => $r->update(['status' => 'taken_by_modality'])),
+                    ->color('primary')
+                    ->visible(fn (WorklistItem $record): bool => $record->status === WorklistItem::STATUS_MW_PUBLISHED)
+                    ->action(fn (WorklistItem $record) => $record->update(['status' => WorklistItem::STATUS_TAKEN_BY_MODALITY])),
                 Action::make('mark_acquired')
                     ->label('Acquired')->icon('heroicon-o-check-badge')
-                    ->color('warning')->visible(fn ($r) => in_array($r->status, ['acquiring', 'taken_by_modality']))
-                    ->action(fn ($r) => $r->update(['status' => 'acquired', 'acquired_at' => now()])),
+                    ->color('warning')
+                    ->visible(fn (WorklistItem $record): bool => in_array($record->status, [WorklistItem::STATUS_ACQUIRING, WorklistItem::STATUS_TAKEN_BY_MODALITY]))
+                    ->action(fn (WorklistItem $record) => $record->update(['status' => WorklistItem::STATUS_ACQUIRED, 'acquired_at' => now()])),
                 Action::make('mark_sent')
                     ->label('Sent to PACS')->icon('heroicon-o-arrow-right-circle')
-                    ->color('success')->visible(fn ($r) => $r->status === 'acquired')
-                    ->action(fn ($r) => $r->update(['status' => 'sent_to_pacs', 'sent_at' => now()])),
+                    ->color('success')
+                    ->visible(fn (WorklistItem $record): bool => $record->status === WorklistItem::STATUS_ACQUIRED)
+                    ->action(fn (WorklistItem $record) => $record->update(['status' => WorklistItem::STATUS_SENT_TO_PACS, 'sent_at' => now()])),
                 Action::make('mark_reported')
                     ->label('Reported')->icon('heroicon-o-document-text')
-                    ->color('teal')->visible(fn ($r) => $r->status === 'sent_to_pacs')
-                    ->action(fn ($r) => $r->update(['status' => 'reported', 'reported_at' => now()])),
+                    ->color('teal')
+                    ->visible(fn (WorklistItem $record): bool => $record->status === WorklistItem::STATUS_SENT_TO_PACS)
+                    ->action(fn (WorklistItem $record) => $record->update(['status' => WorklistItem::STATUS_REPORTED, 'reported_at' => now()])),
                 Action::make('mark_verified')
                     ->label('Verify')->icon('heroicon-o-shield-check')
-                    ->color('emerald')->visible(fn ($r) => $r->status === 'reported')
+                    ->color('emerald')
+                    ->visible(fn (WorklistItem $record): bool => $record->status === WorklistItem::STATUS_REPORTED)
                     ->requiresConfirmation()
-                    ->action(fn ($r) => $r->update([
-                        'status' => 'verified', 'verified_at' => now(), 'verified_by' => auth()->id(),
+                    ->action(fn (WorklistItem $record) => $record->update([
+                        'status' => WorklistItem::STATUS_VERIFIED, 'verified_at' => now(), 'verified_by' => auth()->id(),
                     ])),
                 Action::make('cancel')
                     ->label('Cancel')->icon('heroicon-o-x-circle')
-                    ->color('danger')->visible(fn ($r) => !in_array($r->status, ['cancelled', 'verified']))
+                    ->color('danger')
+                    ->visible(fn (WorklistItem $record): bool => !in_array($record->status, [WorklistItem::STATUS_CANCELLED, WorklistItem::STATUS_VERIFIED]))
                     ->requiresConfirmation()
-                    ->action(fn ($r) => $r->update(['status' => 'cancelled'])),
+                    ->action(fn (WorklistItem $record) => $record->update(['status' => WorklistItem::STATUS_CANCELLED])),
             ])->dropdown(),
         ]);
     }
