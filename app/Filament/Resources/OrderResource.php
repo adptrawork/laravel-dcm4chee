@@ -8,15 +8,21 @@ use App\Filament\Resources\OrderResource\Pages;
 use App\Models\Device;
 use App\Models\Order;
 use App\Models\Patient;
+use App\Models\Server;
+use App\Services\Dcm4chee\Client;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Grid;
+use Filament\Forms\Components\Placeholder;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Components\Wizard\Step;
 use Filament\Schemas\Components\Utilities\Get;
@@ -114,6 +120,67 @@ class OrderResource extends Resource
                             ->placeholder('Keluhan, indikasi pemeriksaan, dsb.')
                             ->rows(3)
                             ->maxLength(5000),
+                    ]),
+
+                Step::make('Server')
+                    ->icon('heroicon-o-server-stack')
+                    ->schema([
+                        Select::make('server_id')
+                            ->label('Server PACS Tujuan')
+                            ->placeholder('Pilih server PACS...')
+                            ->options(fn (): array => Server::where('enabled', true)
+                                ->pluck('name', 'id')
+                                ->toArray())
+                            ->helperText('Server tujuan untuk pengiriman MWL / DICOM')
+                            ->live()
+                            ->required(),
+
+                        Actions::make([
+                            Action::make('testConnection')
+                                ->label('Test Koneksi')
+                                ->icon('heroicon-o-signal')
+                                ->color('gray')
+                                ->action(function (Get $get, $livewire): void {
+                                    $serverId = $get('server_id');
+                                    if (!$serverId) {
+                                        Notification::make()->warning()->title('Pilih server dulu')->send();
+                                        return;
+                                    }
+
+                                    $server = Server::find($serverId);
+                                    if (!$server) {
+                                        Notification::make()->danger()->title('Server tidak ditemukan')->send();
+                                        return;
+                                    }
+
+                                    try {
+                                        $start = microtime(true);
+                                        $client = new Client($server);
+                                        $client->get('studies', ['limit' => 1]);
+                                        $ms = (int) ((microtime(true) - $start) * 1000);
+
+                                        Notification::make()
+                                            ->success()
+                                            ->title("Koneksi berhasil ({$ms}ms)")
+                                            ->body("Base URL: {$server->base_url}")
+                                            ->send();
+                                    } catch (\Throwable $e) {
+                                        Notification::make()
+                                            ->danger()
+                                            ->title('Koneksi gagal')
+                                            ->body($e->getMessage())
+                                            ->persistent()
+                                            ->send();
+                                    }
+                                }),
+                        ]),
+
+                        Placeholder::make('_connection_info')
+                            ->label('')
+                            ->content(fn (Get $get): string => $get('server_id')
+                                ? Server::find($get('server_id'))?->api_base_url ?? ''
+                                : 'Pilih server untuk melihat detail endpoint.')
+                            ->disabled(),
                     ]),
 
                 Step::make('Konfirmasi')

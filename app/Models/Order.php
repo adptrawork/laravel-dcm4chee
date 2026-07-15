@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Jobs\PushWorklistToPacsJob;
+use App\Models\Server;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -45,7 +46,7 @@ class Order extends Model
     ];
 
     protected $fillable = [
-        'patient_id', 'accession_number', 'procedure_id', 'device_id', 'modality',
+        'server_id', 'patient_id', 'accession_number', 'procedure_id', 'device_id', 'modality',
         'requesting_physician', 'clinical_notes', 'status', 'priority',
         'scheduled_date',
     ];
@@ -91,6 +92,11 @@ class Order extends Model
         return $this->belongsTo(Patient::class);
     }
 
+    public function server()
+    {
+        return $this->belongsTo(Server::class);
+    }
+
     public function procedure()
     {
         return $this->belongsTo(Procedure::class);
@@ -98,7 +104,7 @@ class Order extends Model
 
     public function device()
     {
-        return $this->belongsTo(Device::class);
+        return $this->belongsTo(\App\Models\Device::class);
     }
 
     public function worklistItem()
