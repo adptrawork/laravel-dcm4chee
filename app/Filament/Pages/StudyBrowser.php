@@ -24,6 +24,8 @@ final class StudyBrowser extends Page
 
     public ?Server $server = null;
 
+    public string $studyUid = '';
+
     public string $searchName = '';
 
     public string $searchId = '';
@@ -51,6 +53,9 @@ final class StudyBrowser extends Page
             ->components([
                 Grid::make(4)
                     ->schema([
+                        TextInput::make('studyUid')
+                            ->label('Study Instance UID')
+                            ->placeholder('cth. 1.2.840...'),
                         TextInput::make('searchName')
                             ->label('Nama Pasien')
                             ->placeholder('cth. Smith'),
@@ -111,7 +116,16 @@ final class StudyBrowser extends Page
             $this->studies = $results;
         } catch (\Throwable $e) {
             $this->error = 'PACS query failed: '.$e->getMessage();
-            $this->studies = [];
+        $this->error = null;
+
+        $uid = trim($this->studyUid);
+        if (!empty($uid)) {
+            $this->redirect(url('/admin/studies/'.$uid));
+
+            return;
+        }
+
+        $this->studies = [];
         }
 
         $this->searched = true;
