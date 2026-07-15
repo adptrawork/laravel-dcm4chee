@@ -9,7 +9,9 @@ use App\Models\Device;
 use App\Models\Order;
 use App\Models\Patient;
 use App\Models\Server;
+use App\Services\Dcm4chee\AuthService;
 use App\Services\Dcm4chee\Client;
+use Illuminate\Support\Facades\Http;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -140,7 +142,7 @@ class OrderResource extends Resource
                                 ->label('Test Koneksi')
                                 ->icon('heroicon-o-signal')
                                 ->color('gray')
-                                ->action(function (Get $get, $livewire): void {
+                                ->action(function (Get $get): void {
                                     $serverId = $get('server_id');
                                     if (!$serverId) {
                                         Notification::make()->warning()->title('Pilih server dulu')->send();
@@ -153,22 +155,82 @@ class OrderResource extends Resource
                                         return;
                                     }
 
-                                    try {
-                                        $start = microtime(true);
-                                        $client = new Client($server);
-                                        $client->get('studies', ['limit' => 1]);
-                                        $ms = (int) ((microtime(true) - $start) * 1000);
+                                    $steps = [];
+                                    $allOk = true;
 
+                                    // Step 1: DNS / TCP reachability
+                                    $steps[] = '1. Koneksi TCP...';
+                                    try {
+                                        $host = parse_url($server->base_url, PHP_URL_HOST);
+                                        $port = parse_url($server->base_url, PHP_URL_PORT) ?: 443;
+                                        $fp = @fsockopen($host, (int) $port, $errno, $errstr, 5);
+                                        if ($fp) {
+                                            fclose($fp);
+                                            $steps[] = '   ✓ Host reachable';
+                                        } else {
+                                            $steps[] = "   ✗ Host unreachable: {$errstr} ({$errno})";
+                                            $allOk = false;
+                                        }
+                                    } catch (\Throwable $e) {
+                                        $steps[] = '   ✗ ' . $e->getMessage();
+                                        $allOk = false;
+                                    }
+
+                                    // Step 2: HTTP reachability (base URL)
+                                    if ($allOk) {
+                                        $steps[] = '2. HTTP reachability...';
+                                        try {
+                                            $ping = Http::timeout(5)
+                                                ->withOptions(['verify' => $server->ssl_verify])
+                                                ->get($server->api_base_url);
+                                            $steps[] = '   ✓ HTTP ' . $ping->status() . ' (server responds)';
+                                        } catch (\Throwable $e) {
+                                            $steps[] = '   ✗ HTTP unreachable: ' . $e->getMessage();
+                                            $allOk = false;
+                                        }
+                                    }
+
+                                    // Step 3: Keycloak auth
+                                    if ($allOk) {
+                                        $steps[] = '3. Keycloak Auth...';
+                                        try {
+                                            $auth = new AuthService($server);
+                                            $token = $auth->getToken();
+                                            $steps[] = '   ✓ Token obtained (' . mb_substr($token, 0, 20) . '...)';
+                                        } catch (\Throwable $e) {
+                                            $steps[] = '   ✗ Auth failed: ' . $e->getMessage();
+                                            $allOk = false;
+                                        }
+                                    }
+
+                                    // Step 4: API call with proper Accept header
+                                    if ($allOk) {
+                                        $steps[] = '4. API call (GET /studies)...';
+                                        try {
+                                            $start = microtime(true);
+                                            $client = new Client($server);
+                                            $client->get('studies', ['limit' => 1]);
+                                            $ms = (int) ((microtime(true) - $start) * 1000);
+                                            $steps[] = "   ✓ API OK ({$ms}ms)";
+                                        } catch (\Throwable $e) {
+                                            $steps[] = '   ✗ API failed: ' . $e->getMessage();
+                                            $allOk = false;
+                                        }
+                                    }
+
+                                    $body = implode("\n", $steps);
+                                    if ($allOk) {
                                         Notification::make()
                                             ->success()
-                                            ->title("Koneksi berhasil ({$ms}ms)")
-                                            ->body("Base URL: {$server->base_url}")
+                                            ->title('Koneksi berhasil')
+                                            ->body($body)
+                                            ->persistent()
                                             ->send();
-                                    } catch (\Throwable $e) {
+                                    } else {
                                         Notification::make()
                                             ->danger()
                                             ->title('Koneksi gagal')
-                                            ->body($e->getMessage())
+                                            ->body($body)
                                             ->persistent()
                                             ->send();
                                     }

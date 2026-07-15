@@ -9,12 +9,15 @@ use Illuminate\Support\Facades\Http;
 
 class Client
 {
-    protected AuthService $auth;
+    protected ?AuthService $auth = null;
 
     public function __construct(
         protected Server $server,
-    ) {
-        $this->auth = new AuthService($server);
+    ) {}
+
+    protected function auth(): AuthService
+    {
+        return $this->auth ??= new AuthService($this->server);
     }
 
     public function get(string $path, array $query = [], array $headers = []): array
@@ -50,15 +53,21 @@ class Client
 
     public function raw(string $method, string $path, array $options = [], ?string $prefix = null): \Illuminate\Http\Client\Response
     {
-        $token = $this->auth->getToken();
+        $token = $this->auth()->getToken();
+
+        $headers = $options['headers'] ?? [];
+        unset($options['headers']);
+
+        $headers['Accept'] ??= 'application/dicom+json';
 
         if (isset($options['body']) && is_array($options['body'])) {
             $options['body'] = json_encode($options['body']);
-            $options['headers']['Content-Type'] ??= 'application/dicom+json';
+            $headers['Content-Type'] ??= 'application/dicom+json';
         }
 
         $request = Http::timeout($this->server->timeout)
             ->withToken($token)
+            ->withHeaders($headers)
             ->withOptions([
                 'verify' => $this->server->ssl_verify,
             ]);
@@ -83,7 +92,7 @@ class Client
         $response = $this->raw($method, $path, $options);
 
         if ($response->status() === 401 && $attempt === 1) {
-            $this->auth->refreshToken();
+            $this->auth()->refreshToken();
 
             return $this->call($method, $path, $options, attempt: 2);
         }

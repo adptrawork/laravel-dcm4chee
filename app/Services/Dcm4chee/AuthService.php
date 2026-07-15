@@ -34,6 +34,7 @@ class AuthService
         $response = Http::timeout($this->server->timeout)
             ->withOptions(['verify' => $this->server->ssl_verify])
             ->asForm()
+            ->withHeaders(['Accept' => 'application/json'])
             ->post($this->server->keycloak_url . '/realms/dcm4che/protocol/openid-connect/token', [
                 'client_id' => 'dcm4chee-arc-rs',
                 'client_secret' => 'changeit',
