@@ -7,16 +7,12 @@ namespace App\Filament\Pages;
 use App\Models\Server;
 use App\Services\Dcm4chee\Client;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Schema;
 
-class DicomUpload extends Page implements HasForms
+class DicomUpload extends Page
 {
-    use InteractsWithForms;
-
     protected string $view = 'filament.pages.dicom-upload';
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-arrow-up-on-square';
@@ -36,17 +32,19 @@ class DicomUpload extends Page implements HasForms
         return auth()->user()?->can('view_studies') ?? false;
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form->schema([
-            FileUpload::make('dicom')
-                ->label('Select DICOM file(s)')
-                ->acceptedFileTypes(['application/dicom', 'application/octet-stream'])
-                ->multiple()
-                ->preserveFilenames()
-                ->required()
-                ->maxSize(102400),
-        ])->statePath('data');
+        return $schema
+            ->components([
+                FileUpload::make('dicom')
+                    ->label('Select DICOM file(s)')
+                    ->acceptedFileTypes(['application/dicom', 'application/octet-stream'])
+                    ->multiple()
+                    ->preserveFilenames()
+                    ->required()
+                    ->maxSize(102400),
+            ])
+            ->statePath('data');
     }
 
     public function upload(): void

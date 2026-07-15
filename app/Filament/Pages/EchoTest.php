@@ -36,7 +36,7 @@ class EchoTest extends Page
         $this->queueFailed = DB::table('failed_jobs')->count();
     }
 
-    public function test_echo(int $serverId): void
+    public function testEcho(int $serverId): void
     {
         $server = Server::find($serverId);
         if (! $server) {
@@ -48,7 +48,7 @@ class EchoTest extends Page
         $this->results[$serverId] = $server->testConnection();
     }
 
-    public function test_all(): void
+    public function testAll(): void
     {
         foreach (Server::all() as $server) {
             $this->results[$server->id] = ['running' => true, 'ok' => false, 'steps' => []];
