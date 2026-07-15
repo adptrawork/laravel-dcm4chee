@@ -14,7 +14,7 @@ class ListPatients extends ListRecords
     {
         return [
             CreateAction::make()
-                ->visible(fn () => auth()->user()?->hasRole('admin') ?? false),
+                ->visible(fn () => auth()->user()?->hasRole('super_admin') ?? false),
         ];
     }
 }
