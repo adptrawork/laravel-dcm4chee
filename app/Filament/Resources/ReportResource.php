@@ -5,6 +5,8 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ReportResource\Pages;
 use App\Models\Order;
 use App\Models\Report;
+use Filament\Actions\Action;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -12,16 +14,17 @@ use Filament\Forms\Set;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Actions\Action;
-use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class ReportResource extends Resource
 {
     protected static ?string $model = Report::class;
+
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
+
     protected static string|\UnitEnum|null $navigationGroup = 'Clinical';
+
     protected static ?int $navigationSort = 4;
 
     public static function form(Schema $schema): Schema
@@ -31,9 +34,13 @@ class ReportResource extends Resource
                 ->searchable()->nullable()
                 ->live()
                 ->afterStateUpdated(function (Set $set, ?string $state) {
-                    if (!$state) return;
+                    if (! $state) {
+                        return;
+                    }
                     $order = Order::with('worklistItem')->find($state);
-                    if (!$order) return;
+                    if (! $order) {
+                        return;
+                    }
                     $set('accession_number', $order->accession_number);
                     $set('study_instance_uid', $order->worklistItem?->study_instance_uid);
                 }),
@@ -61,7 +68,9 @@ class ReportResource extends Resource
             TextColumn::make('study_instance_uid')->label('Study UID')->limit(20),
             TextColumn::make('radiologist.name')->label('Radiologist'),
             TextColumn::make('status')->badge()
-                ->color(fn ($s) => match($s) { 'draft' => 'gray', 'final' => 'success', 'amended' => 'warning', default => 'gray' }),
+                ->color(fn ($s) => match ($s) {
+                    'draft' => 'gray', 'final' => 'success', 'amended' => 'warning', default => 'gray'
+                }),
             TextColumn::make('created_at')->dateTime(),
             TextColumn::make('finalized_at')->dateTime()->label('Finalized'),
         ])->defaultSort('created_at', 'desc')->actions([

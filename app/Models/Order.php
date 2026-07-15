@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Jobs\PushWorklistToPacsJob;
-use App\Models\Server;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -12,10 +11,15 @@ class Order extends Model
     use SoftDeletes;
 
     const STATUS_PENDING = 'pending';
+
     const STATUS_SCHEDULED = 'scheduled';
+
     const STATUS_IN_PROGRESS = 'in-progress';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_REPORTED = 'reported';
+
     const STATUS_CANCELLED = 'cancelled';
 
     const STATUSES = [
@@ -78,13 +82,14 @@ class Order extends Model
 
     public static function generateAccessionNumber(): string
     {
-        $prefix = 'ACC-' . now()->format('Ymd') . '-';
-        $last = static::where('accession_number', 'like', $prefix . '%')
+        $prefix = 'ACC-'.now()->format('Ymd').'-';
+        $last = static::where('accession_number', 'like', $prefix.'%')
             ->orderBy('accession_number', 'desc')
             ->value('accession_number');
 
         $sequence = $last ? (int) substr($last, -4) + 1 : 1;
-        return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+
+        return $prefix.str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 
     public function patient()
@@ -104,7 +109,7 @@ class Order extends Model
 
     public function device()
     {
-        return $this->belongsTo(\App\Models\Device::class);
+        return $this->belongsTo(Device::class);
     }
 
     public function worklistItem()
@@ -115,5 +120,20 @@ class Order extends Model
     public function report()
     {
         return $this->hasOne(Report::class);
+    }
+
+    public function logs()
+    {
+        return $this->hasMany(OrderLog::class)->latest();
+    }
+
+    public static function logStatus(Order $order, string $to, ?string $reason = null, ?string $from = null): void
+    {
+        $order->logs()->create([
+            'from_status' => $from ?? $order->getOriginal('status'),
+            'to_status' => $to,
+            'reason' => $reason,
+            'user_id' => auth()->id(),
+        ]);
     }
 }

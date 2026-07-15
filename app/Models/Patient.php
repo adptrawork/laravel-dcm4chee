@@ -28,7 +28,7 @@ class Patient extends Model
         static::creating(function (Patient $patient) {
             if (empty($patient->patient_id)) {
                 $count = static::whereDate('created_at', today())->count() + 1;
-                $patient->patient_id = 'MRN-' . now()->format('Ymd') . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
+                $patient->patient_id = 'MRN-'.now()->format('Ymd').'-'.str_pad($count, 4, '0', STR_PAD_LEFT);
             }
         });
     }

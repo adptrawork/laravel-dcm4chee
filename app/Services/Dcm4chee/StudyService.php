@@ -4,18 +4,44 @@ declare(strict_types=1);
 
 namespace App\Services\Dcm4chee;
 
-use App\Dto\SeriesData;
 use App\Models\Server;
 
 final class StudyService
 {
     protected Client $client;
-    protected const int DEFAULT_LIMIT = 50;
 
     public function __construct(
         protected Server $server,
     ) {
         $this->client = new Client($server);
+    }
+
+    private function dicomValue(array $json, string $tag): mixed
+    {
+        return $json[$tag]['Value'][0] ?? null;
+    }
+
+    private function flattenStudy(array $raw): array
+    {
+        $e = fn (string $t) => $this->dicomValue($raw, $t);
+        $pn = fn (string $t) => is_array($e($t)) ? ($e($t)['Alphabetic'] ?? null) : (is_string($e($t)) ? $e($t) : null);
+        $mods = $raw['00080061']['Value'] ?? [];
+        if (is_string($mods)) {
+            $mods = [$mods];
+        }
+
+        return [
+            'patientName' => $pn('00100010'),
+            'patientId' => $e('00100020'),
+            'studyDate' => $e('00080020'),
+            'studyDescription' => $e('00081030'),
+            'accessionNumber' => $e('00080050'),
+            'referringPhysician' => $pn('00080090'),
+            'modalities' => $mods,
+            'series' => (int) ($e('00201206') ?? 0),
+            'instances' => (int) ($e('00201208') ?? 0),
+            'studyUid' => $e('0020000D'),
+        ];
     }
 
     public function search(
@@ -24,7 +50,7 @@ final class StudyService
         ?string $studyDate = null,
         ?string $accessionNumber = null,
         ?string $studyUid = null,
-        int $limit = self::DEFAULT_LIMIT,
+        int $limit = 50,
         int $offset = 0,
     ): array {
         $query = [
@@ -32,17 +58,27 @@ final class StudyService
             'offset' => $offset,
         ];
 
-        if ($patientName) $query['PatientName'] = $patientName;
-        if ($patientId) $query['PatientID'] = $patientId;
-        if ($studyDate) $query['StudyDate'] = $studyDate;
-        if ($accessionNumber) $query['AccessionNumber'] = $accessionNumber;
-        if ($studyUid) $query['StudyInstanceUID'] = $studyUid;
+        if ($patientName) {
+            $query['PatientName'] = $patientName;
+        }
+        if ($patientId) {
+            $query['PatientID'] = $patientId;
+        }
+        if ($studyDate) {
+            $query['StudyDate'] = $studyDate;
+        }
+        if ($accessionNumber) {
+            $query['AccessionNumber'] = $accessionNumber;
+        }
+        if ($studyUid) {
+            $query['StudyInstanceUID'] = $studyUid;
+        }
 
         $data = $this->client->get('studies', $query, [
             'Accept' => 'application/dicom+json',
         ]);
 
-        return DicomHelper::flattenToDto($data);
+        return array_map(fn (array $s) => $this->flattenStudy($s), $data);
     }
 
     public function count(
@@ -53,16 +89,25 @@ final class StudyService
     ): int {
         $query = ['limit' => 0, 'offset' => 0];
 
-        if ($patientName) $query['PatientName'] = $patientName;
-        if ($patientId) $query['PatientID'] = $patientId;
-        if ($studyDate) $query['StudyDate'] = $studyDate;
-        if ($accessionNumber) $query['AccessionNumber'] = $accessionNumber;
+        if ($patientName) {
+            $query['PatientName'] = $patientName;
+        }
+        if ($patientId) {
+            $query['PatientID'] = $patientId;
+        }
+        if ($studyDate) {
+            $query['StudyDate'] = $studyDate;
+        }
+        if ($accessionNumber) {
+            $query['AccessionNumber'] = $accessionNumber;
+        }
 
         try {
             $response = $this->client->raw('GET', 'studies', [
                 'query' => $query,
                 'headers' => ['Accept' => 'application/dicom+json'],
             ]);
+
             // DCM4CHEE returns total count in X-Total-Count header
             return (int) ($response->header('X-Total-Count') ?? 0);
         } catch (\Throwable) {
@@ -70,33 +115,17 @@ final class StudyService
         }
     }
 
-    public function series(string $studyUid): array
+    private function flattenSeries(array $raw): array
     {
-        return $this->client->get("studies/{$studyUid}/series", headers: [
-            'Accept' => 'application/dicom+json',
-        ]);
-    }
+        $e = fn (string $t) => $this->dicomValue($raw, $t);
 
-    public function instances(string $studyUid, string $seriesUid): array
-    {
-        return $this->client->get("studies/{$studyUid}/series/{$seriesUid}/instances", headers: [
-            'Accept' => 'application/dicom+json',
-        ]);
-    }
-
-    public function rendered(string $studyUid, string $seriesUid, string $instanceUid): string
-    {
-        return $this->client->raw('GET', "studies/{$studyUid}/series/{$seriesUid}/instances/{$instanceUid}/rendered", [
-            'headers' => ['Accept' => 'image/jpeg'],
-        ])->body();
-    }
-
-    public function thumbnail(string $studyUid, string $seriesUid, string $instanceUid): string
-    {
-        return $this->client->raw('GET', "studies/{$studyUid}/series/{$seriesUid}/instances/{$instanceUid}/rendered", [
-            'query' => ['viewport' => 256, 'dw' => 256, 'dh' => 256],
-            'headers' => ['Accept' => 'image/jpeg'],
-        ])->body();
+        return [
+            'seriesNumber' => (string) ($e('00200011') ?? ''),
+            'seriesDescription' => $e('0008103E'),
+            'modality' => $e('00080060'),
+            'instances' => (int) ($e('00201209') ?? 0),
+            'seriesUid' => $e('0020000E'),
+        ];
     }
 
     public function getSeriesByStudyUid(string $studyUid): array
@@ -105,12 +134,26 @@ final class StudyService
             'Accept' => 'application/dicom+json',
         ]);
 
-        return array_map(fn (array $s) => SeriesData::fromDicomJson($s), $data);
+        return array_map(fn (array $s) => $this->flattenSeries($s), $data);
     }
 
-    public function metadata(string $studyUid, string $seriesUid, string $instanceUid): array
+    public function getInstances(string $studyUid, string $seriesUid): array
     {
-        return $this->client->get("studies/{$studyUid}/series/{$seriesUid}/instances/{$instanceUid}/metadata", headers: [
+        $data = $this->client->get("studies/{$studyUid}/series/{$seriesUid}/instances", headers: [
+            'Accept' => 'application/dicom+json',
+        ]);
+
+        return array_map(fn (array $raw) => [
+            'instanceNumber' => (string) ($this->dicomValue($raw, '00200013') ?? ''),
+            'sopClassUid' => $this->dicomValue($raw, '00080016'),
+            'instanceUid' => $this->dicomValue($raw, '00080018'),
+            'numberOfFrames' => $this->dicomValue($raw, '00280008'),
+        ], $data);
+    }
+
+    public function getInstanceMetadata(string $instanceUid): array
+    {
+        return $this->client->get("instances/{$instanceUid}/metadata", headers: [
             'Accept' => 'application/dicom+json',
         ]);
     }

@@ -3,25 +3,27 @@
 namespace App\Filament\Pages;
 
 use App\Models\Order;
-use App\Models\Patient;
-use App\Models\Report;
 use App\Models\Server;
 use App\Models\WorklistItem;
 use App\Services\Dcm4chee\Client;
-use Filament\Pages\Page;
 use Filament\Actions\Action;
+use Filament\Pages\Page;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\DB;
 
 class Dashboard extends Page implements HasTable
 {
     use InteractsWithTable;
 
     protected string $view = 'filament.pages.dashboard';
+
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-home';
+
     protected static string|\UnitEnum|null $navigationGroup = 'Clinical';
+
     protected static ?int $navigationSort = 0;
 
     public static function canView(): bool
@@ -30,11 +32,20 @@ class Dashboard extends Page implements HasTable
     }
 
     public ?string $pacsStatus = 'Checking...';
+
     public int $ordersWaiting = 0;
+
     public int $ordersScheduled = 0;
+
     public int $ordersInProgress = 0;
+
     public int $readyToRead = 0;
+
     public int $reportedToday = 0;
+
+    public int $queuePending = 0;
+
+    public int $queueFailed = 0;
 
     public function mount(): void
     {
@@ -46,18 +57,21 @@ class Dashboard extends Page implements HasTable
         $this->readyToRead = Order::where('status', Order::STATUS_COMPLETED)->count();
         $this->reportedToday = Order::where('status', Order::STATUS_REPORTED)
             ->whereDate('updated_at', today())->count();
+        $this->queuePending = DB::table('jobs')->count();
+        $this->queueFailed = DB::table('failed_jobs')->count();
 
-        if (!$server) {
+        if (! $server) {
             $this->pacsStatus = 'No server configured';
+
             return;
         }
 
         try {
             $client = new Client($server);
-            $client->get('studies', ['limit' => 1]);
+            $studies = $client->get('studies', ['limit' => 1]);
             $this->pacsStatus = 'Connected';
         } catch (\Exception $e) {
-            $this->pacsStatus = class_basename($e) . ': ' . $e->getMessage();
+            $this->pacsStatus = class_basename($e).': '.$e->getMessage();
         }
     }
 

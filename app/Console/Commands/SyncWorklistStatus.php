@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Order;
 use App\Models\Server;
 use App\Models\WorklistItem;
 use App\Services\Dcm4chee\StudyService;
@@ -19,6 +20,7 @@ class SyncWorklistStatus extends Command
         WorklistItem::STATUS_MW_PUBLISHED,
         WorklistItem::STATUS_TAKEN_BY_MODALITY,
         WorklistItem::STATUS_ACQUIRING,
+        WorklistItem::STATUS_ACQUIRED,
     ];
 
     public function handle(StudyService $studyService): int
@@ -28,8 +30,9 @@ class SyncWorklistStatus extends Command
             ? Server::find($serverId)
             : Server::where('enabled', true)->first();
 
-        if (!$server) {
+        if (! $server) {
             $this->error('No enabled PACS server found');
+
             return Command::FAILURE;
         }
 
@@ -42,6 +45,7 @@ class SyncWorklistStatus extends Command
 
         if ($items->isEmpty()) {
             $this->info('No worklist items pending sync');
+
             return Command::SUCCESS;
         }
 
@@ -67,6 +71,7 @@ class SyncWorklistStatus extends Command
 
             if ($isDryRun) {
                 $this->line("  [DRY] {$item->accession_number}: {$oldStatus} → sent_to_pacs (UID: {$studyUid}, {$seriesCount} series, {$instanceCount} instances)");
+
                 continue;
             }
 
@@ -76,11 +81,18 @@ class SyncWorklistStatus extends Command
                 'sent_at' => now(),
             ]);
 
-            $this->line("  {$item->accession_number}: {$oldStatus} → sent_to_pacs");
+            if ($item->order) {
+                $from = $item->order->status;
+                $item->order->updateQuietly(['status' => Order::STATUS_COMPLETED]);
+                Order::logStatus($item->order, Order::STATUS_COMPLETED, 'Sync command found study in PACS', $from);
+            }
+
+            $this->line("  {$item->accession_number}: {$oldStatus} → sent_to_pacs (order completed)");
             $updated++;
         }
 
         $this->info("Updated {$updated} items");
+
         return Command::SUCCESS;
     }
 }

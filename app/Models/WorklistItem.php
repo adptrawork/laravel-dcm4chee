@@ -7,15 +7,25 @@ use Illuminate\Database\Eloquent\Model;
 class WorklistItem extends Model
 {
     const STATUS_REGISTERED = 'registered';
+
     const STATUS_MW_PUBLISHED = 'mw_published';
+
     const STATUS_TAKEN_BY_MODALITY = 'taken_by_modality';
+
     const STATUS_ACQUIRING = 'acquiring';
+
     const STATUS_ACQUIRED = 'acquired';
+
     const STATUS_SENT_TO_PACS = 'sent_to_pacs';
+
     const STATUS_ARCHIVED = 'archived';
+
     const STATUS_REPORTED = 'reported';
+
     const STATUS_VERIFIED = 'verified';
+
     const STATUS_CANCELLED = 'cancelled';
+
     const STATUS_FAILED = 'failed';
 
     const STATUSES = [
@@ -91,11 +101,4 @@ class WorklistItem extends Model
     {
         return $this->belongsTo(Order::class);
     }
-
-    public function verifier()
-    {
-        return $this->belongsTo(User::class, 'verified_by');
-    }
-
-
 }

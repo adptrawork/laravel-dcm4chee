@@ -4,16 +4,14 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ServerResource\Pages;
 use App\Models\Server;
-use Filament\Schemas\Components\Section;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
-use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
-use App\Services\Dcm4chee\Client;
-use Filament\Notifications\Notification;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
+use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -21,7 +19,9 @@ use Filament\Tables\Table;
 class ServerResource extends Resource
 {
     protected static ?string $model = Server::class;
+
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-server-stack';
+
     protected static string|\UnitEnum|null $navigationGroup = 'Administration';
 
     public static function form(Schema $schema): Schema
@@ -36,6 +36,11 @@ class ServerResource extends Resource
             Section::make('Authentication')->columns(2)->schema([
                 TextInput::make('username')->required()->minLength(2),
                 TextInput::make('password')->password()->required()->minLength(2),
+                TextInput::make('keycloak_url')
+                    ->label('Keycloak URL')
+                    ->url()
+                    ->placeholder('https://host:8843')
+                    ->helperText('Kosongkan untuk auto-detect (port :8843, realm dcm4che)'),
                 TextInput::make('timeout')->numeric()->default(30)->minValue(1)->maxValue(300),
                 Toggle::make('ssl_verify')->label('Verify SSL'),
             ]),
@@ -59,16 +64,13 @@ class ServerResource extends Resource
                 ->icon('heroicon-o-signal')
                 ->color('success')
                 ->action(function (Server $server) {
-                    try {
-                        $client = new Client($server);
-                        $client->get('patients', ['limit' => 1]);
-                        Notification::make()->success()->title('Connection OK')->send();
-                    } catch (\Throwable $e) {
-                        Notification::make()->danger()
-                            ->title('Connection Failed')
-                            ->body($e->getMessage())
-                            ->send();
-                    }
+                    $result = $server->testConnection();
+                    Notification::make()
+                        ->{$result['ok'] ? 'success' : 'danger'}()
+                        ->title($result['ok'] ? 'Connection OK' : 'Connection Failed')
+                        ->body(implode("\n", $result['steps']))
+                        ->persistent()
+                        ->send();
                 }),
             EditAction::make(),
         ]);

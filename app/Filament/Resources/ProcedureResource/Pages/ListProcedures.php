@@ -9,6 +9,7 @@ use Filament\Resources\Pages\ListRecords;
 class ListProcedures extends ListRecords
 {
     protected static string $resource = ProcedureResource::class;
+
     protected function getHeaderActions(): array
     {
         return [CreateAction::make()];

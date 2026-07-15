@@ -4,18 +4,20 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\DeviceResource\Pages;
 use App\Models\Device;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class DeviceResource extends Resource
 {
     protected static ?string $model = Device::class;
+
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-cpu-chip';
+
     protected static string|\UnitEnum|null $navigationGroup = 'Administration';
 
     public static function form(Schema $schema): Schema

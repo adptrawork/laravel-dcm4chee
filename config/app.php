@@ -54,6 +54,8 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'worklist_api_key' => env('WORKLIST_API_KEY'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

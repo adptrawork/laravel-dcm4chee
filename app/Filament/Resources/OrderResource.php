@@ -9,13 +9,11 @@ use App\Models\Device;
 use App\Models\Order;
 use App\Models\Patient;
 use App\Models\Server;
-use App\Services\Dcm4chee\AuthService;
-use App\Services\Dcm4chee\Client;
-use Illuminate\Support\Facades\Http;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -23,11 +21,9 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Grid;
-use Filament\Forms\Components\Placeholder;
-use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Components\Wizard\Step;
-use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -36,8 +32,11 @@ use Filament\Tables\Table;
 class OrderResource extends Resource
 {
     protected static ?string $model = Order::class;
+
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-plus';
+
     protected static string|\UnitEnum|null $navigationGroup = 'Clinical';
+
     protected static ?int $navigationSort = 2;
 
     public static function form(Schema $schema): Schema
@@ -67,9 +66,10 @@ class OrderResource extends Resource
                                 ]),
                             ])
                             ->createOptionUsing(function (array $data): int {
-                                $data['patient_id'] = 'MRN-' . now()->format('Ymd') . '-' . str_pad(
+                                $data['patient_id'] = 'MRN-'.now()->format('Ymd').'-'.str_pad(
                                     Patient::whereDate('created_at', today())->count() + 1, 4, '0', STR_PAD_LEFT
                                 );
+
                                 return Patient::create($data)->id;
                             })
                             ->required(),
@@ -100,8 +100,8 @@ class OrderResource extends Resource
                                         ->pluck('name', 'id')
                                         ->toArray()
                                     : [])
-                                ->disabled(fn (Get $get): bool => !$get('modality'))
-                                ->helperText(fn (Get $get): ?string => !$get('modality')
+                                ->disabled(fn (Get $get): bool => ! $get('modality'))
+                                ->helperText(fn (Get $get): ?string => ! $get('modality')
                                     ? 'Pilih jenis pemeriksaan dulu' : null)
                                 ->required(),
 
@@ -144,96 +144,26 @@ class OrderResource extends Resource
                                 ->color('gray')
                                 ->action(function (Get $get): void {
                                     $serverId = $get('server_id');
-                                    if (!$serverId) {
+                                    if (! $serverId) {
                                         Notification::make()->warning()->title('Pilih server dulu')->send();
+
                                         return;
                                     }
 
                                     $server = Server::find($serverId);
-                                    if (!$server) {
+                                    if (! $server) {
                                         Notification::make()->danger()->title('Server tidak ditemukan')->send();
+
                                         return;
                                     }
 
-                                    $steps = [];
-                                    $allOk = true;
-
-                                    // Step 1: DNS / TCP reachability
-                                    $steps[] = '1. Koneksi TCP...';
-                                    try {
-                                        $host = parse_url($server->base_url, PHP_URL_HOST);
-                                        $port = parse_url($server->base_url, PHP_URL_PORT) ?: 443;
-                                        $fp = @fsockopen($host, (int) $port, $errno, $errstr, 5);
-                                        if ($fp) {
-                                            fclose($fp);
-                                            $steps[] = '   ✓ Host reachable';
-                                        } else {
-                                            $steps[] = "   ✗ Host unreachable: {$errstr} ({$errno})";
-                                            $allOk = false;
-                                        }
-                                    } catch (\Throwable $e) {
-                                        $steps[] = '   ✗ ' . $e->getMessage();
-                                        $allOk = false;
-                                    }
-
-                                    // Step 2: HTTP reachability (base URL)
-                                    if ($allOk) {
-                                        $steps[] = '2. HTTP reachability...';
-                                        try {
-                                            $ping = Http::timeout(5)
-                                                ->withOptions(['verify' => $server->ssl_verify])
-                                                ->get($server->api_base_url);
-                                            $steps[] = '   ✓ HTTP ' . $ping->status() . ' (server responds)';
-                                        } catch (\Throwable $e) {
-                                            $steps[] = '   ✗ HTTP unreachable: ' . $e->getMessage();
-                                            $allOk = false;
-                                        }
-                                    }
-
-                                    // Step 3: Keycloak auth
-                                    if ($allOk) {
-                                        $steps[] = '3. Keycloak Auth...';
-                                        try {
-                                            $auth = new AuthService($server);
-                                            $token = $auth->getToken();
-                                            $steps[] = '   ✓ Token obtained (' . mb_substr($token, 0, 20) . '...)';
-                                        } catch (\Throwable $e) {
-                                            $steps[] = '   ✗ Auth failed: ' . $e->getMessage();
-                                            $allOk = false;
-                                        }
-                                    }
-
-                                    // Step 4: API call with proper Accept header
-                                    if ($allOk) {
-                                        $steps[] = '4. API call (GET /studies)...';
-                                        try {
-                                            $start = microtime(true);
-                                            $client = new Client($server);
-                                            $client->get('studies', ['limit' => 1]);
-                                            $ms = (int) ((microtime(true) - $start) * 1000);
-                                            $steps[] = "   ✓ API OK ({$ms}ms)";
-                                        } catch (\Throwable $e) {
-                                            $steps[] = '   ✗ API failed: ' . $e->getMessage();
-                                            $allOk = false;
-                                        }
-                                    }
-
-                                    $body = implode("\n", $steps);
-                                    if ($allOk) {
-                                        Notification::make()
-                                            ->success()
-                                            ->title('Koneksi berhasil')
-                                            ->body($body)
-                                            ->persistent()
-                                            ->send();
-                                    } else {
-                                        Notification::make()
-                                            ->danger()
-                                            ->title('Koneksi gagal')
-                                            ->body($body)
-                                            ->persistent()
-                                            ->send();
-                                    }
+                                    $result = $server->testConnection();
+                                    Notification::make()
+                                        ->{$result['ok'] ? 'success' : 'danger'}()
+                                        ->title($result['ok'] ? 'Koneksi berhasil' : 'Koneksi gagal')
+                                        ->body(implode("\n", $result['steps']))
+                                        ->persistent()
+                                        ->send();
                                 }),
                         ]),
 
@@ -275,7 +205,7 @@ class OrderResource extends Resource
             TextColumn::make('device.name')->label('Device')->toggleable(),
             TextColumn::make('requesting_physician')->label('Referring'),
             TextColumn::make('status')->badge()
-                ->color(fn ($s) => \App\Models\Order::STATUS_COLORS[$s] ?? 'gray'),
+                ->color(fn ($s) => Order::STATUS_COLORS[$s] ?? 'gray'),
             TextColumn::make('priority')->badge()
                 ->color(fn ($s) => match ($s) {
                     'routine' => 'gray',

@@ -15,18 +15,29 @@ use Filament\Schemas\Schema;
 final class StudyBrowser extends Page
 {
     protected string $view = 'filament.pages.study-browser';
+
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-magnifying-glass';
+
     protected static string|\UnitEnum|null $navigationGroup = 'Imaging';
+
     protected static ?int $navigationSort = 0;
 
     public ?Server $server = null;
+
     public string $searchName = '';
+
     public string $searchId = '';
+
     public string $searchDate = '';
+
     public string $searchAccession = '';
+
     public array $studies = [];
+
     public bool $searched = false;
+
     public ?string $error = null;
+
     public int $page = 1;
 
     public static function canView(): bool
@@ -70,8 +81,9 @@ final class StudyBrowser extends Page
 
     public function loadStudies(): void
     {
-        if (!$this->server) {
+        if (! $this->server) {
             $this->error = 'No PACS server configured';
+
             return;
         }
 
@@ -92,12 +104,13 @@ final class StudyBrowser extends Page
 
             if (empty($results) && $this->page > 1) {
                 $this->page--;
+
                 return;
             }
 
             $this->studies = $results;
         } catch (\Throwable $e) {
-            $this->error = 'PACS query failed: ' . $e->getMessage();
+            $this->error = 'PACS query failed: '.$e->getMessage();
             $this->studies = [];
         }
 

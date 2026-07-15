@@ -19,6 +19,20 @@ class Report extends Model
         ];
     }
 
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::saved(function (Report $r) {
+            if ($r->status === 'final' && $r->order) {
+                $from = $r->order->status;
+                $r->order->updateQuietly(['status' => Order::STATUS_REPORTED]);
+                Order::logStatus($r->order, Order::STATUS_REPORTED, 'Report finalized', $from);
+                $r->worklistItem?->updateQuietly(['status' => WorklistItem::STATUS_REPORTED]);
+            }
+        });
+    }
+
     public function worklistItem()
     {
         return $this->belongsTo(WorklistItem::class);

@@ -204,8 +204,10 @@ enum PermissionsEnum: string
     case DELETE_POSTS = 'delete posts';
 }
 
+// Creation requires ->value
+Permission::findOrCreate(PermissionsEnum::EDIT_POSTS->value, 'web');
+
 // Most methods accept enums directly
-Permission::findOrCreate(PermissionsEnum::EDIT_POSTS, 'web');
 $user->assignRole(RolesEnum::WRITER);
 $user->hasRole(RolesEnum::WRITER);
 $role->givePermissionTo(PermissionsEnum::EDIT_POSTS);

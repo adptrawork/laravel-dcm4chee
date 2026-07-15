@@ -65,7 +65,7 @@ class DefaultDataSeeder extends Seeder
             ['patient' => $patients[4], 'procedure' => 'CT-CHEST', 'modality' => 'CT', 'status' => Order::STATUS_REPORTED, 'priority' => 'routine', 'scheduled_date' => '2026-07-11'],
         ] as $o) {
             $order = Order::createQuietly([
-                'accession_number' => 'ACC-20260711-' . str_pad((string) $accession++, 4, '0', STR_PAD_LEFT),
+                'accession_number' => 'ACC-20260711-'.str_pad((string) $accession++, 4, '0', STR_PAD_LEFT),
                 'server_id' => $server->id,
                 'patient_id' => $o['patient']->id,
                 'procedure_id' => $procedures[$o['procedure']]->id,

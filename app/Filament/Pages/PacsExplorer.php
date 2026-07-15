@@ -9,11 +9,15 @@ use Filament\Pages\Page;
 class PacsExplorer extends Page
 {
     protected string $view = 'filament.pages.pacs-explorer';
+
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-table-cells';
+
     protected static string|\UnitEnum|null $navigationGroup = 'Imaging';
+
     protected static ?int $navigationSort = 1;
 
     public string $studyUid = '';
+
     public ?string $error = null;
 
     public static function canView(): bool
@@ -28,9 +32,10 @@ class PacsExplorer extends Page
         $uid = trim($this->studyUid);
         if (empty($uid)) {
             $this->error = 'Study Instance UID harus diisi';
+
             return;
         }
 
-        $this->redirect(url('/admin/studies/' . $uid));
+        $this->redirect(url('/admin/studies/'.$uid));
     }
 }
